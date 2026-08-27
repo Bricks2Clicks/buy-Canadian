@@ -1,0 +1,14 @@
+# Secrets — never commit credentials
+made-in-Canada API Key.txt
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+
+# Logs and OS
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
