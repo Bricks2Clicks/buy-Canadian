@@ -80,11 +80,15 @@ npm run refresh-category-stats
 
 This runs ~20 live `search_catalog` calls (one per root category, `limit: 1`) with the same filters as the site (`made in Canada`, in-stock, ships to CA). Commit the updated JSON so production picks up the new order without re-running on deploy.
 
+## API (homepage tiles)
+
+`GET /api/catalog/home-tiles?slugs=ae,hg,aa,me,fb&to=CA` — batch category preview images for the homepage. Up to **5 slugs** per request (matches ranked chunks). Response: `{ destinationBlocked, tiles: { [slug]: { image, imageAlt, title } | null }, errors? }`. The homepage loads tiles in rank order from `/api/categories`, five categories per sequential request.
+
 ## Pages
 
 | Path | Purpose |
 |------|---------|
-| `/` | Hero, top-ranked category row, phased tile loading |
+| `/` | Hero, ranked category grid, batch tile previews |
 | `/category.html?slug=aa` | Category grid, 50 per page, Load more |
 | `/search.html?q=…` | Search + made in Canada query |
 | `/product.html?id=…` | Product detail, merchant CTA in new tab |

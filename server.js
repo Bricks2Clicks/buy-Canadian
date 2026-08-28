@@ -4,7 +4,6 @@ import { fileURLToPath } from 'url';
 import { config, SHIPPABLE_COUNTRIES } from './src/config.js';
 import { combineQuery, getProduct, searchCatalog } from './src/catalog-client.js';
 import {
-  normalizeProductCard,
   normalizeProductDetail,
   normalizeSearchResponse,
 } from './src/normalize-product.js';
@@ -13,6 +12,12 @@ import {
   getCategoryBySlug,
 } from './src/taxonomy.js';
 import { getCategoryStatsMeta, getSortedCategories } from './src/category-stats.js';
+import {
+  fetchCategoryTilePreview,
+  fetchCategoryTilePreviews,
+  MAX_HOME_TILES_PER_REQUEST,
+  parseSlugList,
+} from './src/category-tile.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -98,6 +103,27 @@ app.get('/api/catalog/search', async (req, res) => {
   }
 });
 
+app.get('/api/catalog/home-tiles', async (req, res) => {
+  try {
+    const slugs = parseSlugList(req.query.slugs);
+    if (!slugs.length) {
+      return sendJson(res, { error: 'Missing or empty slugs' }, 400);
+    }
+    if (slugs.length > MAX_HOME_TILES_PER_REQUEST) {
+      return sendJson(
+        res,
+        { error: `At most ${MAX_HOME_TILES_PER_REQUEST} slugs per request` },
+        400,
+      );
+    }
+
+    const result = await fetchCategoryTilePreviews(slugs, req.query.to);
+    sendJson(res, result);
+  } catch (err) {
+    handleApiError(res, err);
+  }
+});
+
 app.get('/api/catalog/tile/:slug', async (req, res) => {
   try {
     const category = getCategoryBySlug(req.params.slug);
@@ -105,27 +131,13 @@ app.get('/api/catalog/tile/:slug', async (req, res) => {
       return sendJson(res, { error: 'Unknown category' }, 404);
     }
 
-    const raw = await searchCatalog({
-      query: config.catalogQuery,
-      destination: req.query.to,
-      categoryGid: categoryGid(category.slug),
-      limit: 1,
-    });
-
-    if (raw.destinationBlocked) {
-      return sendJson(res, { tile: null, destinationBlocked: true });
-    }
-
-    const content = raw?.structuredContent ?? raw ?? {};
-    const product = content.products?.[0];
-    const card = product ? normalizeProductCard(product) : null;
+    const result = await fetchCategoryTilePreview(category.slug, req.query.to);
 
     sendJson(res, {
       slug: category.slug,
       name: category.name,
-      tile: card
-        ? { image: card.image, imageAlt: card.imageAlt, title: card.title }
-        : null,
+      tile: result.tile,
+      destinationBlocked: result.destinationBlocked,
     });
   } catch (err) {
     handleApiError(res, err);

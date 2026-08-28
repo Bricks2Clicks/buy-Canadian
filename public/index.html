@@ -131,57 +131,43 @@
 
       grid.innerHTML = categories.map((c) => categoryCard(c)).join('');
 
-      async function loadTile(slug) {
+      const TILE_CHUNK_SIZE = 5;
+      const rankedSlugs = categories.map((c) => c.slug);
+
+      function paintTile(slug, tile, eager = false) {
         const container = document.getElementById(`tile-${slug}`);
         if (!container) return;
-        try {
-          const data = await fetchJson(`/api/catalog/tile/${encodeURIComponent(slug)}`);
-          if (data.tile?.image) {
-            container.innerHTML = `<img src="${escapeHtml(data.tile.image)}" alt="${escapeHtml(data.tile.imageAlt || data.tile.title)}" loading="lazy">`;
-          } else {
-            container.innerHTML = '<div class="placeholder">No preview</div>';
-          }
-        } catch {
-          container.innerHTML = '<div class="placeholder">Unavailable</div>';
-        }
-      }
-
-      const featured = categories.slice(0, 4);
-      const rest = categories.slice(4);
-
-      await Promise.all(featured.map((c) => loadTile(c.slug)));
-
-      let restIndex = 0;
-      const BATCH = 3;
-
-      function loadNextBatch() {
-        const batch = rest.slice(restIndex, restIndex + BATCH);
-        restIndex += BATCH;
-        batch.forEach((c) => loadTile(c.slug));
-        if (restIndex < rest.length) {
-          setTimeout(loadNextBatch, 400);
-        }
-      }
-
-      if (rest.length) {
-        if ('IntersectionObserver' in window) {
-          const sentinel = document.createElement('div');
-          sentinel.style.height = '1px';
-          grid.after(sentinel);
-          const observer = new IntersectionObserver(
-            (entries) => {
-              if (entries[0].isIntersecting) {
-                observer.disconnect();
-                loadNextBatch();
-              }
-            },
-            { rootMargin: '200px' },
-          );
-          observer.observe(sentinel);
+        if (tile?.image) {
+          const loading = eager ? 'eager' : 'lazy';
+          container.innerHTML = `<img src="${escapeHtml(tile.image)}" alt="${escapeHtml(tile.imageAlt || tile.title)}" loading="${loading}">`;
         } else {
-          loadNextBatch();
+          container.innerHTML = '<div class="placeholder">No preview</div>';
         }
       }
+
+      async function loadHomeTileChunks(slugs) {
+        for (let i = 0; i < slugs.length; i += TILE_CHUNK_SIZE) {
+          const chunk = slugs.slice(i, i + TILE_CHUNK_SIZE);
+          const eager = i === 0;
+          try {
+            const data = await fetchJson(
+              `/api/catalog/home-tiles?${new URLSearchParams({ slugs: chunk.join(',') })}`,
+            );
+            for (const slug of chunk) {
+              paintTile(slug, data.tiles?.[slug] ?? null, eager);
+            }
+          } catch {
+            for (const slug of chunk) {
+              const container = document.getElementById(`tile-${slug}`);
+              if (container) {
+                container.innerHTML = '<div class="placeholder">Unavailable</div>';
+              }
+            }
+          }
+        }
+      }
+
+      await loadHomeTileChunks(rankedSlugs);
     </script>
   </body>
 </html>
