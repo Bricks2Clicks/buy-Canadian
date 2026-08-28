@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en-CA">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Buy Canadian — By Canadians, For Canadians</title>
+    <meta
+      name="description"
+      content="Discover products from Canadian Shopify merchants. Live search — no stored catalog."
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <a class="logo" href="/">
+          <span data-logo-mark></span>
+          Buy Canadian
+        </a>
+        <form class="search-form" id="header-search">
+          <label class="sr-only" for="search-q">Search products</label>
+          <input
+            id="search-q"
+            name="q"
+            type="search"
+            placeholder="Search Canadian products…"
+            autocomplete="off"
+          />
+          <button type="submit" class="btn btn-primary">Search</button>
+        </form>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="container">
+          <div class="hero-flag" id="hero-flag"></div>
+          <h1>Buy Canadian</h1>
+          <p class="tagline">By Canadians, For Canadians.</p>
+          <p class="intro">
+            Discover products from Canadian Shopify merchants — live from the
+            Shopify Global Catalog. We do not store product listings or images;
+            every visit runs a fresh search.
+          </p>
+          <p class="disclaimer-inline">
+            Results are best-effort for “made in Canada” wording. We cannot
+            guarantee product origin. Checkout, shipping, and policies are
+            handled by each merchant.
+          </p>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="container">
+          <h2 class="section-title">Shop by category</h2>
+          <div class="category-grid" id="category-grid"></div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-grid">
+          <div class="footer-disclaimer">
+            <p>
+              <strong>Buy Canadian</strong> is a pass-through discovery site. We
+              are not the merchant of record and are not affiliated with
+              Shopify Inc.
+            </p>
+            <p>
+              Prices and availability come from live Catalog data and may change
+              without notice. Origin labels such as “Mentions made in Canada”
+              reflect product copy returned by the Catalog — not verified
+              customs or manufacturing origin.
+            </p>
+            <p>
+              Each product link takes you to the merchant’s own store for
+              purchase, shipping, returns, and support.
+            </p>
+          </div>
+          <div class="footer-meta">
+            <label for="ships-to">Ships to</label>
+            <select id="ships-to" aria-label="Shipping destination">
+              <option value="CA">Canada</option>
+            </select>
+            <p style="margin-top: 0.75rem">
+              <a href="/faq.html">FAQ &amp; disclaimers</a>
+            </p>
+          </div>
+        </div>
+        <div class="footer-links">
+          <p class="footer-attribution"></p>
+          &copy; <span id="year"></span> Buy Canadian
+        </div>
+      </div>
+    </footer>
+
+    <script type="module">
+      import {
+        fetchJson,
+        heroSvg,
+        initFooter,
+        initSearchForm,
+        mountLogoMark,
+        withShipsTo,
+        escapeHtml,
+      } from '/js/app.js';
+
+      mountLogoMark();
+
+      document.getElementById('year').textContent = new Date().getFullYear();
+      document.getElementById('hero-flag').innerHTML = heroSvg();
+      initSearchForm();
+      initFooter();
+
+      const grid = document.getElementById('category-grid');
+      const { categories } = await fetchJson('/api/categories');
+
+      function categoryCard(cat, loading = true) {
+        const href = withShipsTo(`/category.html?slug=${encodeURIComponent(cat.slug)}`);
+        return `
+          <a class="category-card" href="${href}" data-slug="${escapeHtml(cat.slug)}">
+            <div class="category-card-image" id="tile-${escapeHtml(cat.slug)}">
+              <div class="placeholder">${loading ? 'Loading…' : 'No preview'}</div>
+            </div>
+            <div class="category-card-body">
+              <h3>${escapeHtml(cat.name)}</h3>
+            </div>
+          </a>`;
+      }
+
+      grid.innerHTML = categories.map((c) => categoryCard(c)).join('');
+
+      async function loadTile(slug) {
+        const container = document.getElementById(`tile-${slug}`);
+        if (!container) return;
+        try {
+          const data = await fetchJson(`/api/catalog/tile/${encodeURIComponent(slug)}`);
+          if (data.tile?.image) {
+            container.innerHTML = `<img src="${escapeHtml(data.tile.image)}" alt="${escapeHtml(data.tile.imageAlt || data.tile.title)}" loading="lazy">`;
+          } else {
+            container.innerHTML = '<div class="placeholder">No preview</div>';
+          }
+        } catch {
+          container.innerHTML = '<div class="placeholder">Unavailable</div>';
+        }
+      }
+
+      const featured = categories.slice(0, 4);
+      const rest = categories.slice(4);
+
+      await Promise.all(featured.map((c) => loadTile(c.slug)));
+
+      let restIndex = 0;
+      const BATCH = 3;
+
+      function loadNextBatch() {
+        const batch = rest.slice(restIndex, restIndex + BATCH);
+        restIndex += BATCH;
+        batch.forEach((c) => loadTile(c.slug));
+        if (restIndex < rest.length) {
+          setTimeout(loadNextBatch, 400);
+        }
+      }
+
+      if (rest.length) {
+        if ('IntersectionObserver' in window) {
+          const sentinel = document.createElement('div');
+          sentinel.style.height = '1px';
+          grid.after(sentinel);
+          const observer = new IntersectionObserver(
+            (entries) => {
+              if (entries[0].isIntersecting) {
+                observer.disconnect();
+                loadNextBatch();
+              }
+            },
+            { rootMargin: '200px' },
+          );
+          observer.observe(sentinel);
+        } else {
+          loadNextBatch();
+        }
+      }
+    </script>
+  </body>
+</html>

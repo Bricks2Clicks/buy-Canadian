@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en-CA">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Category — Buy Canadian</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <a class="logo" href="/">
+          <span data-logo-mark></span>
+          Buy Canadian
+        </a>
+        <form class="search-form" id="header-search">
+          <label class="sr-only" for="search-q">Search products</label>
+          <input id="search-q" name="q" type="search" placeholder="Search Canadian products…" />
+          <button type="submit" class="btn btn-primary">Search</button>
+        </form>
+      </div>
+    </header>
+
+    <main class="container">
+      <div class="page-header">
+        <h1 id="category-title">Category</h1>
+        <p id="category-subtitle">Live results from Canadian merchants</p>
+      </div>
+      <div id="status"></div>
+      <div class="product-grid product-grid--listing" id="product-grid"></div>
+      <div class="load-more-wrap" id="load-more-wrap" hidden>
+        <button type="button" class="btn btn-secondary" id="load-more">Load more</button>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-grid">
+          <div class="footer-disclaimer">
+            <p>
+              Results are live from the Shopify Global Catalog with query
+              “made in Canada.” We do not guarantee product origin. Checkout is
+              on the merchant’s site.
+            </p>
+          </div>
+          <div class="footer-meta">
+            <label for="ships-to">Ships to</label>
+            <select id="ships-to"><option value="CA">Canada</option></select>
+            <p style="margin-top: 0.75rem"><a href="/faq.html">FAQ</a></p>
+          </div>
+        </div>
+        <div class="footer-links">
+          <p class="footer-attribution"></p>
+        </div>
+      </div>
+    </footer>
+
+    <script type="module">
+      import {
+        fetchJson,
+        initFooter,
+        initSearchForm,
+        mountLogoMark,
+        renderProductGrid,
+        appendProductGrid,
+        showError,
+        MAX_PRODUCTS,
+      } from '/js/app.js';
+
+      mountLogoMark();
+      initSearchForm();
+      initFooter();
+
+      const params = new URLSearchParams(window.location.search);
+      const slug = params.get('slug');
+      if (!slug) {
+        window.location.href = '/';
+        throw new Error('missing slug');
+      }
+
+      const statusEl = document.getElementById('status');
+      const grid = document.getElementById('product-grid');
+      const loadMoreWrap = document.getElementById('load-more-wrap');
+      const loadMoreBtn = document.getElementById('load-more');
+
+      const { categories } = await fetchJson('/api/categories');
+      const category = categories.find((c) => c.slug === slug);
+      if (category) {
+        document.getElementById('category-title').textContent = category.name;
+      }
+
+      let cursor = null;
+      let totalLoaded = 0;
+      let loading = false;
+
+      async function loadPage() {
+        if (loading) return;
+        loading = true;
+        loadMoreBtn.disabled = true;
+        statusEl.innerHTML = totalLoaded === 0 ? '<div class="spinner"></div>' : '';
+
+        try {
+          let path = `/api/catalog/search?category=${encodeURIComponent(slug)}&limit=50`;
+          if (cursor) path += `&cursor=${encodeURIComponent(cursor)}`;
+
+          const data = await fetchJson(path);
+          if (data.destinationBlocked) {
+            showError(statusEl, data.message);
+            loadMoreWrap.hidden = true;
+            return;
+          }
+
+          if (totalLoaded === 0) {
+            renderProductGrid(grid, data.products);
+          } else {
+            appendProductGrid(grid, data.products);
+          }
+
+          totalLoaded += data.products.length;
+          cursor = data.pagination.cursor;
+          const hasNext =
+            data.pagination.hasNextPage && totalLoaded < MAX_PRODUCTS;
+
+          if (totalLoaded === 0) {
+            statusEl.innerHTML =
+              '<p class="status-message">No in-stock products found in this category right now.</p>';
+          } else {
+            statusEl.innerHTML = '';
+          }
+
+          loadMoreWrap.hidden = !hasNext;
+        } catch (err) {
+          showError(statusEl, err.message);
+        } finally {
+          loading = false;
+          loadMoreBtn.disabled = false;
+        }
+      }
+
+      loadMoreBtn.addEventListener('click', loadPage);
+      loadPage();
+    </script>
+  </body>
+</html>

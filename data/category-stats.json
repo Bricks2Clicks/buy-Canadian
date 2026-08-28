@@ -1,0 +1,109 @@
+{
+  "measuredAt": "2026-08-28T00:28:13.008Z",
+  "catalogId": "01m12qne33qw184bkw337397hj",
+  "query": "made in Canada",
+  "destination": "CA",
+  "note": "eligibleCount values are pagination.total_count estimates from Shopify Global Catalog, not exact inventory counts. Pagination is capped at 1,000 results per query.",
+  "categories": [
+    {
+      "slug": "ae",
+      "name": "Arts & Entertainment",
+      "eligibleCount": 450
+    },
+    {
+      "slug": "hg",
+      "name": "Home & Garden",
+      "eligibleCount": 429
+    },
+    {
+      "slug": "aa",
+      "name": "Apparel & Accessories",
+      "eligibleCount": 427
+    },
+    {
+      "slug": "me",
+      "name": "Media",
+      "eligibleCount": 421
+    },
+    {
+      "slug": "fb",
+      "name": "Food, Beverages & Tobacco",
+      "eligibleCount": 420
+    },
+    {
+      "slug": "fr",
+      "name": "Furniture",
+      "eligibleCount": 408
+    },
+    {
+      "slug": "vp",
+      "name": "Vehicles & Parts",
+      "eligibleCount": 399
+    },
+    {
+      "slug": "hb",
+      "name": "Health & Beauty",
+      "eligibleCount": 395
+    },
+    {
+      "slug": "tg",
+      "name": "Toys & Games",
+      "eligibleCount": 380
+    },
+    {
+      "slug": "ha",
+      "name": "Hardware",
+      "eligibleCount": 373
+    },
+    {
+      "slug": "sg",
+      "name": "Sporting Goods",
+      "eligibleCount": 348
+    },
+    {
+      "slug": "ap",
+      "name": "Animals & Pet Supplies",
+      "eligibleCount": 347
+    },
+    {
+      "slug": "os",
+      "name": "Office Supplies",
+      "eligibleCount": 331
+    },
+    {
+      "slug": "el",
+      "name": "Electronics",
+      "eligibleCount": 324
+    },
+    {
+      "slug": "bi",
+      "name": "Business & Industrial",
+      "eligibleCount": 247
+    },
+    {
+      "slug": "lb",
+      "name": "Luggage & Bags",
+      "eligibleCount": 201
+    },
+    {
+      "slug": "bt",
+      "name": "Baby & Toddler",
+      "eligibleCount": 133
+    },
+    {
+      "slug": "so",
+      "name": "Software",
+      "eligibleCount": 126
+    },
+    {
+      "slug": "co",
+      "name": "Cameras & Optics",
+      "eligibleCount": 41
+    },
+    {
+      "slug": "rc",
+      "name": "Religious & Ceremonial",
+      "eligibleCount": 18
+    }
+  ]
+}

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en-CA">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FAQ — Buy Canadian</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <a class="logo" href="/">
+          <span data-logo-mark></span>
+          Buy Canadian
+        </a>
+        <form class="search-form" id="header-search">
+          <label class="sr-only" for="search-q">Search products</label>
+          <input id="search-q" name="q" type="search" placeholder="Search Canadian products…" />
+          <button type="submit" class="btn btn-primary">Search</button>
+        </form>
+      </div>
+    </header>
+
+    <main class="container faq-page">
+      <h1>Frequently asked questions</h1>
+
+      <div class="faq-item">
+        <h2>What is Buy Canadian?</h2>
+        <p>
+          Buy Canadian is a discovery site that helps you find products from
+          Canadian Shopify merchants. We search the Shopify Global Catalog live
+          on each visit — we do not maintain our own product database or cache
+          images.
+        </p>
+      </div>
+
+      <div class="faq-item">
+        <h2>Are all products made in Canada?</h2>
+        <p>
+          No. We search with the phrase “made in Canada” and may show a
+          “Mentions made in Canada” badge when returned product copy includes
+          similar wording. That is not verified manufacturing or customs
+          origin. Many results are from Canadian sellers shipping within
+          Canada.
+        </p>
+      </div>
+
+      <div class="faq-item">
+        <h2>Who sells these products?</h2>
+        <p>
+          Each listing is sold by an independent Shopify merchant. When you
+          click through, you leave Buy Canadian and complete checkout on that
+          merchant’s store. We are not the merchant of record.
+        </p>
+      </div>
+
+      <div class="faq-item">
+        <h2>Are prices accurate?</h2>
+        <p>
+          Prices shown here come from live Catalog data at the time of your
+          search. The merchant’s storefront may show different prices,
+          promotions, or availability.
+        </p>
+      </div>
+
+      <div class="faq-item">
+        <h2>Shipping and returns</h2>
+        <p>
+          Shipping destinations, costs, and return policies are set by each
+          merchant. Buy Canadian does not ship products or process returns.
+        </p>
+      </div>
+
+      <div class="faq-item">
+        <h2>Are you affiliated with Shopify?</h2>
+        <p>
+          No. Buy Canadian uses Shopify’s Global Catalog API but is an
+          independent project and is not affiliated with Shopify Inc.
+        </p>
+      </div>
+
+      <div class="faq-item">
+        <h2>Shipping outside Canada</h2>
+        <p>
+          The site currently searches a catalog locked to Canadian buyers and
+          shipping within Canada. Support for other destinations is planned for
+          a future update.
+        </p>
+      </div>
+
+      <p><a href="/">&larr; Back to home</a></p>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-grid">
+          <div class="footer-disclaimer">
+            <p>
+              Tagline: <strong>By Canadians, For Canadians.</strong>
+            </p>
+          </div>
+          <div class="footer-meta">
+            <label for="ships-to">Ships to</label>
+            <select id="ships-to"><option value="CA">Canada</option></select>
+          </div>
+        </div>
+        <div class="footer-links">
+          <p class="footer-attribution"></p>
+        </div>
+      </div>
+    </footer>
+
+    <script type="module">
+      import { initFooter, initSearchForm, mountLogoMark } from '/js/app.js';
+      mountLogoMark();
+      initSearchForm();
+      initFooter();
+    </script>
+  </body>
+</html>
