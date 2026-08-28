@@ -1,7 +1,5 @@
 import { searchCatalogOriginUnion } from './catalog-client.js';
-import { normalizeProductCard } from './normalize-product.js';
 import { categoryGid, getCategoryBySlug } from './taxonomy.js';
-import { getOriginSearchPhrases } from './origin-query.js';
 
 export const MAX_HOME_TILES_PER_REQUEST = 5;
 
@@ -19,11 +17,10 @@ export function parseSlugList(slugsParam) {
   return result;
 }
 
-function tileFromProduct(product) {
-  const card = product ? normalizeProductCard(product) : null;
-  return card
-    ? { image: card.image, imageAlt: card.imageAlt, title: card.title }
-    : null;
+/** searchCatalogOriginUnion returns normalized product cards, not raw catalog rows. */
+function tileFromNormalizedCard(card) {
+  if (!card?.image) return null;
+  return { image: card.image, imageAlt: card.imageAlt, title: card.title };
 }
 
 export async function fetchCategoryTilePreview(slug, destination) {
@@ -38,42 +35,30 @@ export async function fetchCategoryTilePreview(slug, destination) {
     };
   }
 
-  let destinationBlocked = false;
+  const result = await searchCatalogOriginUnion({
+    userQuery: '',
+    destination,
+    categoryGid: categoryGid(category.slug),
+    limit: 1,
+  });
 
-  const results = await Promise.all(
-    getOriginSearchPhrases().map((phrase) =>
-      searchCatalogOriginUnion({
-        userQuery: '',
-        destination,
-        categoryGid: categoryGid(category.slug),
-        limit: 1,
-        originPhrases: [phrase],
-      }),
-    ),
-  );
-
-  for (const result of results) {
-    if (result.destinationBlocked) {
-      destinationBlocked = true;
-      continue;
-    }
-    const tile = tileFromProduct(result.products?.[0]);
-    if (tile) {
-      return {
-        slug: category.slug,
-        name: category.name,
-        tile,
-        destinationBlocked: false,
-        unknown: false,
-      };
-    }
+  if (result.destinationBlocked) {
+    return {
+      slug: category.slug,
+      name: category.name,
+      tile: null,
+      destinationBlocked: true,
+      unknown: false,
+    };
   }
+
+  const tile = tileFromNormalizedCard(result.products?.[0]);
 
   return {
     slug: category.slug,
     name: category.name,
-    tile: null,
-    destinationBlocked,
+    tile,
+    destinationBlocked: false,
     unknown: false,
   };
 }
