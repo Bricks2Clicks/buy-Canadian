@@ -36,26 +36,36 @@ Share a preview URL like `https://buy-canadian.vercel.app` with advisors. Custom
    | `SHOPIFY_CATALOG_ID` | `01m12qne33qw184bkw337397hj` |
    | `CATALOG_QUERY` | `made in Canada` |
    | `UTM_SOURCE` | `buy-canadian` |
-   | `PUBLIC_BASE_URL` | See step 3 below |
+
+   **Do not add `PUBLIC_BASE_URL` yet** — Vercel auto-detects your deployment URL (see step 3).
 
    Optional (leave unset for now):
 
    - `SHOPIFY_CATALOG_ID_EXPORT` — phase 2 international shipping
    - `SHOPIFY_AGENT_PROFILE_URL` — only if you override the default profile URL
+   - `SITE_BASE_URL` — only if auto-detect is wrong (use **Plain text**, not Secret)
 
 5. Click **Deploy** and wait for the build to finish.
 
-## 3. Set `PUBLIC_BASE_URL` (important)
+## 3. Public URL (usually automatic)
 
-Catalog needs your public agent profile at `/.well-known/ucp-agent.json`.
+Catalog needs your agent profile at `/.well-known/ucp-agent.json`. On Vercel, the app reads **`VERCEL_URL`** / **`VERCEL_PROJECT_PRODUCTION_URL`** automatically — **you can skip setting `PUBLIC_BASE_URL`.**
 
-1. After the first deploy, copy your production URL, e.g.  
-   `https://buy-canadian-xxxx.vercel.app`
-2. Vercel → **Project → Settings → Environment Variables**
-3. Set **`PUBLIC_BASE_URL`** to that URL (no trailing slash).
-4. **Redeploy** (Deployments → … on latest → Redeploy).
+After deploy, smoke-test Catalog (open a category). If products load, you are done with this step.
 
-If you add a custom domain later, update `PUBLIC_BASE_URL` to `https://buycanadian.bricks2clicks.online` and redeploy.
+### If you need to set the URL manually
+
+Vercel treats names starting with **`PUBLIC_`** as *public* config (not secrets). The UI may refuse **Secret** or **Config** for `PUBLIC_BASE_URL`.
+
+**Option A — skip it** (recommended): redeploy without `PUBLIC_BASE_URL`; auto-detect handles it.
+
+**Option B — use a different name:** add **`SITE_BASE_URL`** (not `PUBLIC_`) as **Plain text** / default visibility:
+
+`https://your-project.vercel.app` (no trailing slash)
+
+**Option C — if you must use `PUBLIC_BASE_URL`:** set visibility to **Plain text** (not Secret). It is only a public site URL, not a credential.
+
+Custom domain later: add the domain in Vercel Domains, then set **`SITE_BASE_URL`** to `https://buycanadian.bricks2clicks.online` (Plain text) and redeploy.
 
 ## 4. Smoke test
 
@@ -79,7 +89,7 @@ Send the **Production** deployment URL from the Vercel dashboard. Preview deploy
 2. Add `buycanadian.bricks2clicks.online`
 3. At your DNS host (Cloudflare, SiteGround, etc.), add the record Vercel shows (usually **CNAME** `buycanadian` → `cname.vercel-dns.com`)
 4. Wait for SSL (automatic)
-5. Update **`PUBLIC_BASE_URL`** to `https://buycanadian.bricks2clicks.online` and redeploy
+5. Update **`SITE_BASE_URL`** to `https://buycanadian.bricks2clicks.online` (Plain text) and redeploy — or rely on `VERCEL_PROJECT_PRODUCTION_URL` after the domain is assigned.
 
 ## 7. Updates after deploy
 

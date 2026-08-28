@@ -4,9 +4,31 @@ const DEFAULT_QUERY = 'made in Canada';
 const SHOPIFY_SAMPLE_PROFILE =
   'https://shopify.dev/ucp/agent-profiles/2026-04-08/valid-with-capabilities.json';
 
+function resolvePublicBaseUrl() {
+  const explicit = process.env.PUBLIC_BASE_URL || process.env.SITE_BASE_URL;
+  if (explicit) {
+    return explicit.replace(/\/$/, '');
+  }
+
+  // Vercel sets these automatically — no manual PUBLIC_BASE_URL needed on Hobby
+  const production = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+  if (production) {
+    const host = production.replace(/^https?:\/\//, '').replace(/\/$/, '');
+    return `https://${host}`;
+  }
+
+  const vercel = process.env.VERCEL_URL;
+  if (vercel) {
+    const host = vercel.replace(/^https?:\/\//, '').replace(/\/$/, '');
+    return `https://${host}`;
+  }
+
+  return 'http://localhost:3000';
+}
+
 export const config = {
   port: Number(process.env.PORT) || 3000,
-  publicBaseUrl: process.env.PUBLIC_BASE_URL || 'http://localhost:3000',
+  publicBaseUrl: resolvePublicBaseUrl(),
   clientId: process.env.SHOPIFY_CLIENT_ID,
   clientSecret: process.env.SHOPIFY_CLIENT_SECRET,
   catalogIdCa: process.env.SHOPIFY_CATALOG_ID || '01m12qne33qw184bkw337397hj',
