@@ -71,7 +71,7 @@ function registerTools(controller) {
       name: 'search_products',
       title: 'Search Canadian catalog',
       description:
-        'Search live in-stock products from Canadian Shopify merchants. Combines optional query with a made-in-Canada catalog filter.',
+        'Search live in-stock products from Canadian Shopify merchants. Combines optional query with English or French made-in-Canada catalog wording.',
       inputSchema: {
         type: 'object',
         properties: {

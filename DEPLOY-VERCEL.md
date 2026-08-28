@@ -34,7 +34,7 @@ Share a preview URL like `https://buy-canadian.vercel.app` with advisors. Custom
    | `SHOPIFY_CLIENT_ID` | Your Dev Dashboard client ID |
    | `SHOPIFY_CLIENT_SECRET` | Your Dev Dashboard client secret |
    | `SHOPIFY_CATALOG_ID` | `01m12qne33qw184bkw337397hj` |
-   | `CATALOG_QUERY` | `made in Canada` |
+   | `CATALOG_QUERY` | *(optional)* Override origin filter; default is English + French OR query |
    | `UTM_SOURCE` | `buy-canadian` |
 
    **Do not add `PUBLIC_BASE_URL` yet** — Vercel auto-detects your deployment URL (see step 3).

@@ -48,7 +48,7 @@ Live product discovery from Canadian Shopify merchants via the [Shopify Global C
 | `SHOPIFY_CATALOG_ID_EXPORT` | Phase 2: export catalog (ships from CA only) |
 | `PUBLIC_BASE_URL` | Public site URL (agent profile in production) |
 | `SHOPIFY_AGENT_PROFILE_URL` | Override agent profile URL (localhost uses Shopify sample) |
-| `CATALOG_QUERY` | Default query suffix (default: `made in Canada`) |
+| `CATALOG_QUERY` | Optional single-phrase override (default: separate EN/FR phrase searches merged) |
 | `UTM_SOURCE` | Outbound link campaign tag (default: `buy-canadian`) |
 | `PORT` | Server port (default: `3000`; Vercel sets this automatically) |
 
@@ -78,7 +78,7 @@ Refresh quarterly or after major catalog changes:
 npm run refresh-category-stats
 ```
 
-This runs ~20 live `search_catalog` calls (one per root category, `limit: 1`) with the same filters as the site (`made in Canada`, in-stock, ships to CA). Commit the updated JSON so production picks up the new order without re-running on deploy.
+Origin matching runs **separate Catalog searches** per phrase (`made in Canada`, `fabriqué au Canada`, `fabrique au Canada`) and merges results. Catalog `OR` syntax does not union reliably. Category stats use the **max** count across phrases.
 
 ## API (homepage tiles)
 

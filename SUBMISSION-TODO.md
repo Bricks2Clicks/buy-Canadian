@@ -40,6 +40,8 @@ Track remaining tasks for the [WebMCP Challenge](https://webmcp.devpost.com/) an
 - [ ] View page source — JSON-LD present on home, FAQ, about, product
 - [ ] Agent can call `list_categories` → `search_products` → `get_product_details`
 - [ ] `open_product_page` navigates the tab to a product
+- [ ] **Remove local/Vercel `CATALOG_QUERY`** if set to English-only — default is bilingual OR query
+- [ ] **Re-run** `npm run refresh-category-stats` and commit updated `data/category-stats.json`
 
 ---
 
@@ -64,5 +66,5 @@ Use the **Submission description** section in [`CONTEST.md`](CONTEST.md) when fi
 ## Post-contest (optional)
 
 - [ ] Add `SITE_BASE_URL` on Vercel if canonical URLs should use custom domain
-- [ ] Refresh category stats: `npm run refresh-category-stats`
+- [ ] **Remove `CATALOG_QUERY` from Vercel env** if set to `made in Canada` only — default now includes French (`fabriqué au Canada`)
 - [ ] Request Netlify credits before Sep 1 if needed (optional per contest rules)

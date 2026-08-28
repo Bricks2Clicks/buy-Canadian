@@ -1,7 +1,7 @@
-import { config } from './config.js';
-import { searchCatalog } from './catalog-client.js';
+import { searchCatalogOriginUnion } from './catalog-client.js';
 import { normalizeProductCard } from './normalize-product.js';
 import { categoryGid, getCategoryBySlug } from './taxonomy.js';
+import { getOriginSearchPhrases } from './origin-query.js';
 
 export const MAX_HOME_TILES_PER_REQUEST = 5;
 
@@ -19,21 +19,11 @@ export function parseSlugList(slugsParam) {
   return result;
 }
 
-function tileFromSearchRaw(raw) {
-  if (raw.destinationBlocked) {
-    return { tile: null, destinationBlocked: true };
-  }
-
-  const content = raw?.structuredContent ?? raw ?? {};
-  const product = content.products?.[0];
+function tileFromProduct(product) {
   const card = product ? normalizeProductCard(product) : null;
-
-  return {
-    tile: card
-      ? { image: card.image, imageAlt: card.imageAlt, title: card.title }
-      : null,
-    destinationBlocked: false,
-  };
+  return card
+    ? { image: card.image, imageAlt: card.imageAlt, title: card.title }
+    : null;
 }
 
 export async function fetchCategoryTilePreview(slug, destination) {
@@ -48,19 +38,41 @@ export async function fetchCategoryTilePreview(slug, destination) {
     };
   }
 
-  const raw = await searchCatalog({
-    query: config.catalogQuery,
-    destination,
-    categoryGid: categoryGid(category.slug),
-    limit: 1,
-  });
+  let destinationBlocked = false;
 
-  const { tile, destinationBlocked } = tileFromSearchRaw(raw);
+  const results = await Promise.all(
+    getOriginSearchPhrases().map((phrase) =>
+      searchCatalogOriginUnion({
+        userQuery: '',
+        destination,
+        categoryGid: categoryGid(category.slug),
+        limit: 1,
+        originPhrases: [phrase],
+      }),
+    ),
+  );
+
+  for (const result of results) {
+    if (result.destinationBlocked) {
+      destinationBlocked = true;
+      continue;
+    }
+    const tile = tileFromProduct(result.products?.[0]);
+    if (tile) {
+      return {
+        slug: category.slug,
+        name: category.name,
+        tile,
+        destinationBlocked: false,
+        unknown: false,
+      };
+    }
+  }
 
   return {
     slug: category.slug,
     name: category.name,
-    tile,
+    tile: null,
     destinationBlocked,
     unknown: false,
   };

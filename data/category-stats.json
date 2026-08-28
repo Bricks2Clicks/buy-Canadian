@@ -1,24 +1,19 @@
 {
-  "measuredAt": "2026-08-28T00:28:13.008Z",
+  "measuredAt": "2026-08-28T19:11:12.371Z",
   "catalogId": "01m12qne33qw184bkw337397hj",
-  "query": "made in Canada",
+  "query": "made in Canada; fabriqué au Canada; fabrique au Canada",
   "destination": "CA",
-  "note": "eligibleCount values are pagination.total_count estimates from Shopify Global Catalog, not exact inventory counts. Pagination is capped at 1,000 results per query.",
+  "note": "eligibleCount is the max pagination.total_count across separate English/French origin phrase searches (union estimate lower bound). Not exact inventory. Pagination capped at 1,000 per phrase.",
   "categories": [
     {
       "slug": "ae",
       "name": "Arts & Entertainment",
-      "eligibleCount": 450
+      "eligibleCount": 448
     },
     {
       "slug": "hg",
       "name": "Home & Garden",
-      "eligibleCount": 429
-    },
-    {
-      "slug": "aa",
-      "name": "Apparel & Accessories",
-      "eligibleCount": 427
+      "eligibleCount": 441
     },
     {
       "slug": "me",
@@ -31,79 +26,84 @@
       "eligibleCount": 420
     },
     {
+      "slug": "aa",
+      "name": "Apparel & Accessories",
+      "eligibleCount": 418
+    },
+    {
       "slug": "fr",
       "name": "Furniture",
-      "eligibleCount": 408
+      "eligibleCount": 399
     },
     {
       "slug": "vp",
       "name": "Vehicles & Parts",
-      "eligibleCount": 399
-    },
-    {
-      "slug": "hb",
-      "name": "Health & Beauty",
-      "eligibleCount": 395
-    },
-    {
-      "slug": "tg",
-      "name": "Toys & Games",
-      "eligibleCount": 380
+      "eligibleCount": 397
     },
     {
       "slug": "ha",
       "name": "Hardware",
-      "eligibleCount": 373
+      "eligibleCount": 395
     },
     {
-      "slug": "sg",
-      "name": "Sporting Goods",
-      "eligibleCount": 348
+      "slug": "hb",
+      "name": "Health & Beauty",
+      "eligibleCount": 382
     },
     {
       "slug": "ap",
       "name": "Animals & Pet Supplies",
-      "eligibleCount": 347
+      "eligibleCount": 379
+    },
+    {
+      "slug": "tg",
+      "name": "Toys & Games",
+      "eligibleCount": 358
+    },
+    {
+      "slug": "sg",
+      "name": "Sporting Goods",
+      "eligibleCount": 354
     },
     {
       "slug": "os",
       "name": "Office Supplies",
-      "eligibleCount": 331
+      "eligibleCount": 340
     },
     {
       "slug": "el",
       "name": "Electronics",
-      "eligibleCount": 324
-    },
-    {
-      "slug": "bi",
-      "name": "Business & Industrial",
-      "eligibleCount": 247
+      "eligibleCount": 331
     },
     {
       "slug": "lb",
       "name": "Luggage & Bags",
-      "eligibleCount": 201
+      "eligibleCount": 256
+    },
+    {
+      "slug": "bi",
+      "name": "Business & Industrial",
+      "eligibleCount": 244
     },
     {
       "slug": "bt",
       "name": "Baby & Toddler",
-      "eligibleCount": 133
+      "eligibleCount": 210
     },
     {
       "slug": "so",
       "name": "Software",
-      "eligibleCount": 126
+      "eligibleCount": 155
     },
     {
       "slug": "co",
       "name": "Cameras & Optics",
-      "eligibleCount": 41
+      "eligibleCount": 34
     },
     {
       "slug": "rc",
       "name": "Religious & Ceremonial",
-      "eligibleCount": 18
+      "eligibleCount": 22
     }
   ]
 }

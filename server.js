@@ -2,10 +2,9 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { config, SHIPPABLE_COUNTRIES } from './src/config.js';
-import { combineQuery, getProduct, searchCatalog } from './src/catalog-client.js';
+import { getProduct, searchCatalogOriginUnion } from './src/catalog-client.js';
 import {
   normalizeProductDetail,
-  normalizeSearchResponse,
 } from './src/normalize-product.js';
 import {
   categoryGid,
@@ -75,18 +74,18 @@ app.get('/api/catalog/search', async (req, res) => {
       return sendJson(res, { error: 'Unknown category' }, 404);
     }
 
-    const query = combineQuery(q ? String(q) : '');
+    const query = q ? String(q) : '';
     const parsedLimit = Math.min(Math.max(Number(limit) || 50, 1), 50);
 
-    const raw = await searchCatalog({
-      query,
+    const normalized = await searchCatalogOriginUnion({
+      userQuery: query,
       destination: to,
       categoryGid: category ? categoryGid(category.slug) : undefined,
       cursor: cursor ? String(cursor) : undefined,
       limit: parsedLimit,
     });
 
-    if (raw.destinationBlocked) {
+    if (normalized.destinationBlocked) {
       return sendJson(res, {
         products: [],
         pagination: { cursor: null, hasNextPage: false, totalCount: 0 },
@@ -96,7 +95,6 @@ app.get('/api/catalog/search', async (req, res) => {
       });
     }
 
-    const normalized = normalizeSearchResponse(raw);
     sendJson(res, normalized);
   } catch (err) {
     handleApiError(res, err);

@@ -1,6 +1,6 @@
 import 'dotenv/config';
+import { buildOriginCatalogQuery } from './origin-query.js';
 
-const DEFAULT_QUERY = 'made in Canada';
 const SHOPIFY_SAMPLE_PROFILE =
   'https://shopify.dev/ucp/agent-profiles/2026-04-08/valid-with-capabilities.json';
 
@@ -33,7 +33,7 @@ export const config = {
   clientSecret: process.env.SHOPIFY_CLIENT_SECRET,
   catalogIdCa: process.env.SHOPIFY_CATALOG_ID || '01m12qne33qw184bkw337397hj',
   catalogIdExport: process.env.SHOPIFY_CATALOG_ID_EXPORT || '',
-  catalogQuery: process.env.CATALOG_QUERY || DEFAULT_QUERY,
+  catalogQuery: process.env.CATALOG_QUERY || buildOriginCatalogQuery(),
   utmSource: process.env.UTM_SOURCE || 'buy-canadian',
   tokenUrl: 'https://api.shopify.com/auth/access_token',
   catalogMcpUrl: 'https://catalog.shopify.com/api/ucp/mcp',

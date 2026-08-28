@@ -3,22 +3,19 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { config } from '../src/config.js';
-import { searchCatalog } from '../src/catalog-client.js';
+import { estimateOriginUnionCount } from '../src/catalog-client.js';
+import { buildOriginCatalogQuery } from '../src/origin-query.js';
 import { ROOT_CATEGORIES, categoryGid } from '../src/taxonomy.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const OUT_PATH = path.join(__dirname, '..', 'data', 'category-stats.json');
 
-function extractTotalCount(result) {
-  const content = result?.structuredContent ?? result ?? {};
-  const pagination = content.pagination ?? {};
-  return pagination.total_count ?? 0;
-}
-
 async function main() {
+  const queryLabel = buildOriginCatalogQuery();
+
   console.log('Refreshing category stats from Shopify Global Catalog…');
   console.log(`Catalog: ${config.catalogIdCa}`);
-  console.log(`Query: "${config.catalogQuery}"`);
+  console.log(`Origin phrases (max per phrase): ${queryLabel}`);
   console.log(`Destination: CA\n`);
 
   const rows = [];
@@ -26,22 +23,19 @@ async function main() {
   for (const category of ROOT_CATEGORIES) {
     process.stdout.write(`  ${category.slug} (${category.name})… `);
     try {
-      const raw = await searchCatalog({
-        query: config.catalogQuery,
+      const { eligibleCount, destinationBlocked } = await estimateOriginUnionCount({
         destination: 'CA',
         categoryGid: categoryGid(category.slug),
-        limit: 1,
       });
 
-      if (raw.destinationBlocked) {
+      if (destinationBlocked) {
         console.log('blocked (export catalog required)');
         rows.push({ slug: category.slug, name: category.name, eligibleCount: 0 });
         continue;
       }
 
-      const count = extractTotalCount(raw);
-      console.log(`~${count}`);
-      rows.push({ slug: category.slug, name: category.name, eligibleCount: count });
+      console.log(`~${eligibleCount}`);
+      rows.push({ slug: category.slug, name: category.name, eligibleCount });
     } catch (err) {
       console.log(`error: ${err.message}`);
       rows.push({ slug: category.slug, name: category.name, eligibleCount: 0 });
@@ -58,10 +52,10 @@ async function main() {
   const snapshot = {
     measuredAt: new Date().toISOString(),
     catalogId: config.catalogIdCa,
-    query: config.catalogQuery,
+    query: queryLabel,
     destination: 'CA',
     note:
-      'eligibleCount values are pagination.total_count estimates from Shopify Global Catalog, not exact inventory counts. Pagination is capped at 1,000 results per query.',
+      'eligibleCount is the max pagination.total_count across separate English/French origin phrase searches (union estimate lower bound). Not exact inventory. Pagination capped at 1,000 per phrase.',
     categories: rows,
   };
 
