@@ -102,17 +102,79 @@
           <div class="footer-meta">
             <label for="ships-to">Ships to</label>
             <select id="ships-to"><option value="CA">Canada</option></select>
+            <p class="footer-nav"><a href="/about.html">About</a> · <a href="/faq.html">FAQ &amp; disclaimers</a></p>
           </div>
         </div>
-        <div class="footer-links">
-          <p class="footer-attribution"></p>
-        </div>
+        <div class="footer-links">&copy; <span id="year"></span> Buy Canadian</div>
       </div>
     </footer>
 
+    <script type="module" src="/js/webmcp.js"></script>
     <script type="module">
       import { initFooter, initSearchForm, mountLogoMark } from '/js/app.js';
+      import {
+        applyPageSeo,
+        injectJsonLd,
+        faqPageSchema,
+        webSiteSchema,
+        breadcrumbSchema,
+      } from '/js/seo.js';
+
+      const faqItems = [
+        {
+          question: 'What is Buy Canadian?',
+          answer:
+            'Buy Canadian is a discovery site that helps you find products from Canadian Shopify merchants. We search the Shopify Global Catalog live on each visit — we do not maintain our own product database or cache images.',
+        },
+        {
+          question: 'Are all products made in Canada?',
+          answer:
+            'No. We search with the phrase “made in Canada” and may show a badge when product copy includes similar wording. That is not verified manufacturing or customs origin.',
+        },
+        {
+          question: 'Who sells these products?',
+          answer:
+            'Each listing is sold by an independent Shopify merchant. Checkout happens on the merchant’s store. Buy Canadian is not the merchant of record.',
+        },
+        {
+          question: 'Are prices accurate?',
+          answer:
+            'Prices come from live Catalog data at search time. The merchant’s storefront may show different prices or promotions.',
+        },
+        {
+          question: 'Shipping and returns',
+          answer:
+            'Shipping and returns are set by each merchant. Buy Canadian does not ship products or process returns.',
+        },
+        {
+          question: 'Are you affiliated with Shopify?',
+          answer:
+            'No. Buy Canadian uses Shopify’s Global Catalog API but is an independent project.',
+        },
+        {
+          question: 'Shipping outside Canada',
+          answer:
+            'The site currently searches a catalog locked to Canadian buyers and shipping within Canada.',
+        },
+      ];
+
+      applyPageSeo({
+        title: 'FAQ — Buy Canadian',
+        description:
+          'Frequently asked questions about Buy Canadian — live catalog discovery, made-in-Canada search, merchants, shipping, and disclaimers.',
+        path: '/faq.html',
+      });
+      injectJsonLd(webSiteSchema());
+      injectJsonLd(faqPageSchema(faqItems));
+      injectJsonLd(
+        breadcrumbSchema([
+          { name: 'Home', path: '/' },
+          { name: 'FAQ', path: '/faq.html' },
+        ]),
+      );
+
       mountLogoMark();
+      document.getElementById('year').textContent = new Date().getFullYear();
       initSearchForm();
       initFooter();
     </script>

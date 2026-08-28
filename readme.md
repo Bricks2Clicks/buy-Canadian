@@ -84,6 +84,26 @@ This runs ~20 live `search_catalog` calls (one per root category, `limit: 1`) wi
 
 `GET /api/catalog/home-tiles?slugs=ae,hg,aa,me,fb&to=CA` — batch category preview images for the homepage. Up to **5 slugs** per request (matches ranked chunks). Response: `{ destinationBlocked, tiles: { [slug]: { image, imageAlt, title } | null }, errors? }`. The homepage loads tiles in rank order from `/api/categories`, five categories per sequential request.
 
+## WebMCP (browser agent tools)
+
+Buy Canadian registers [WebMCP](https://webmcp.devpost.com/) tools in supporting browsers so in-tab AI assistants can search the same live catalog as humans. Implementation: [`public/js/webmcp.js`](public/js/webmcp.js).
+
+| Tool | Purpose |
+|------|---------|
+| `list_categories` | Ranked category list |
+| `search_products` | Live catalog search |
+| `get_product_details` | Product by id |
+| `open_product_page` | Navigate tab to product |
+| `open_category_page` | Navigate tab to category |
+
+**Judge / local testing:** ChatGPT desktop in-app browser, or Chrome 149+ with `chrome://flags/#enable-webmcp-testing`. See [`CONTEST.md`](CONTEST.md) and [`SUBMISSION-TODO.md`](SUBMISSION-TODO.md).
+
+Server-side catalog access uses Shopify Catalog MCP ([`src/catalog-client.js`](src/catalog-client.js)); UCP agent profile at `/.well-known/ucp-agent.json`.
+
+## License
+
+MIT — see [`LICENSE`](LICENSE).
+
 ## Pages
 
 | Path | Purpose |
@@ -92,6 +112,7 @@ This runs ~20 live `search_catalog` calls (one per root category, `limit: 1`) wi
 | `/category.html?slug=aa` | Category grid, 50 per page, Load more |
 | `/search.html?q=…` | Search + made in Canada query |
 | `/product.html?id=…` | Product detail, merchant CTA in new tab |
+| `/about.html` | Who built it, why, WebMCP tools, credits |
 | `/faq.html` | Disclaimers and FAQ |
 
 ## Phase 2

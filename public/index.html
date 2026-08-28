@@ -83,18 +83,19 @@
             <select id="ships-to" aria-label="Shipping destination">
               <option value="CA">Canada</option>
             </select>
-            <p style="margin-top: 0.75rem">
+            <p class="footer-nav">
+              <a href="/about.html">About</a> ·
               <a href="/faq.html">FAQ &amp; disclaimers</a>
             </p>
           </div>
         </div>
         <div class="footer-links">
-          <p class="footer-attribution"></p>
           &copy; <span id="year"></span> Buy Canadian
         </div>
       </div>
     </footer>
 
+    <script type="module" src="/js/webmcp.js"></script>
     <script type="module">
       import {
         fetchJson,
@@ -105,6 +106,24 @@
         withShipsTo,
         escapeHtml,
       } from '/js/app.js';
+      import {
+        applyPageSeo,
+        injectJsonLd,
+        webSiteSchema,
+        organizationSchema,
+        webApplicationSchema,
+        DEFAULT_DESCRIPTION,
+        SITE_NAME,
+      } from '/js/seo.js';
+
+      applyPageSeo({
+        title: `${SITE_NAME} — By Canadians, For Canadians`,
+        description: DEFAULT_DESCRIPTION,
+        path: '/',
+      });
+      injectJsonLd(webSiteSchema());
+      injectJsonLd(organizationSchema());
+      injectJsonLd(webApplicationSchema());
 
       mountLogoMark();
 

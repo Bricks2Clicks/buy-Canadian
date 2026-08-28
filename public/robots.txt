@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://buycanadian.bricks2clicks.online/sitemap.xml

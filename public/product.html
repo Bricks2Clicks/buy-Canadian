@@ -39,15 +39,14 @@
           <div class="footer-meta">
             <label for="ships-to">Ships to</label>
             <select id="ships-to"><option value="CA">Canada</option></select>
-            <p style="margin-top: 0.75rem"><a href="/faq.html">FAQ</a></p>
+            <p class="footer-nav"><a href="/about.html">About</a> · <a href="/faq.html">FAQ</a></p>
           </div>
         </div>
-        <div class="footer-links">
-          <p class="footer-attribution"></p>
-        </div>
+        <div class="footer-links">&copy; <span id="year"></span> Buy Canadian</div>
       </div>
     </footer>
 
+    <script type="module" src="/js/webmcp.js"></script>
     <script type="module">
       import {
         fetchJson,
@@ -57,6 +56,12 @@
         escapeHtml,
         showError,
       } from '/js/app.js';
+      import {
+        applyPageSeo,
+        injectJsonLd,
+        breadcrumbSchema,
+        productSchema,
+      } from '/js/seo.js';
 
       mountLogoMark();
 
@@ -142,6 +147,24 @@
 
         root.hidden = false;
         statusEl.innerHTML = '';
+
+        const pagePath = `/product.html?id=${encodeURIComponent(product.id)}${selectedVariantId ? `&variant=${encodeURIComponent(selectedVariantId)}` : ''}`;
+        applyPageSeo({
+          title: `${product.title} — Buy Canadian`,
+          description:
+            product.descriptionPlain?.slice(0, 155) ||
+            `${product.title} from a Canadian Shopify merchant. Live catalog listing — checkout on the merchant's store.`,
+          path: pagePath,
+          type: 'product',
+          image: product.images?.[0]?.url,
+        });
+        injectJsonLd(
+          breadcrumbSchema([
+            { name: 'Home', path: '/' },
+            { name: product.title, path: pagePath },
+          ]),
+        );
+        injectJsonLd(productSchema(product, pagePath));
 
         root.querySelectorAll('.variant-option').forEach((btn) => {
           btn.addEventListener('click', () => {

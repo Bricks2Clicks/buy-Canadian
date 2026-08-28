@@ -92,10 +92,6 @@ export async function initFooter() {
     select.addEventListener('change', () => setShipsTo(select.value));
   }
 
-  document.querySelectorAll('.footer-attribution').forEach((el) => {
-    el.innerHTML =
-      '<a href="https://www.flaticon.com/free-icons/maple-leaf" title="maple leaf icons">Maple leaf icons created by Magnific - Flaticon</a>';
-  });
 }
 
 export function initSearchForm() {

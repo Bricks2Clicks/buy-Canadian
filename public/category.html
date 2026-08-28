@@ -46,15 +46,14 @@
           <div class="footer-meta">
             <label for="ships-to">Ships to</label>
             <select id="ships-to"><option value="CA">Canada</option></select>
-            <p style="margin-top: 0.75rem"><a href="/faq.html">FAQ</a></p>
+            <p class="footer-nav"><a href="/about.html">About</a> · <a href="/faq.html">FAQ</a></p>
           </div>
         </div>
-        <div class="footer-links">
-          <p class="footer-attribution"></p>
-        </div>
+        <div class="footer-links">&copy; <span id="year"></span> Buy Canadian</div>
       </div>
     </footer>
 
+    <script type="module" src="/js/webmcp.js"></script>
     <script type="module">
       import {
         fetchJson,
@@ -66,6 +65,12 @@
         showError,
         MAX_PRODUCTS,
       } from '/js/app.js';
+      import {
+        applyPageSeo,
+        injectJsonLd,
+        breadcrumbSchema,
+        itemListSchema,
+      } from '/js/seo.js';
 
       mountLogoMark();
       initSearchForm();
@@ -85,10 +90,25 @@
 
       const { categories } = await fetchJson('/api/categories');
       const category = categories.find((c) => c.slug === slug);
+      const categoryName = category?.name || 'Category';
       if (category) {
         document.getElementById('category-title').textContent = category.name;
       }
 
+      const pagePath = `/category.html?slug=${encodeURIComponent(slug)}`;
+      applyPageSeo({
+        title: `${categoryName} — Buy Canadian`,
+        description: `Shop ${categoryName} from Canadian Shopify merchants. Live catalog results with made-in-Canada search filter. Ships within Canada.`,
+        path: pagePath,
+      });
+      injectJsonLd(
+        breadcrumbSchema([
+          { name: 'Home', path: '/' },
+          { name: categoryName, path: pagePath },
+        ]),
+      );
+
+      let schemaInjected = false;
       let cursor = null;
       let totalLoaded = 0;
       let loading = false;
@@ -112,6 +132,12 @@
 
           if (totalLoaded === 0) {
             renderProductGrid(grid, data.products);
+            if (data.products.length && !schemaInjected) {
+              injectJsonLd(
+                itemListSchema(data.products, `${categoryName} — Buy Canadian`, pagePath),
+              );
+              schemaInjected = true;
+            }
           } else {
             appendProductGrid(grid, data.products);
           }

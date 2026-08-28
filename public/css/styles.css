@@ -512,6 +512,56 @@ img {
   font-size: 0.8rem;
 }
 
+.footer-nav {
+  margin-top: 0.75rem;
+}
+
+.about-tagline {
+  color: var(--red);
+  font-weight: 600;
+  margin: -0.5rem 0 1.5rem;
+}
+
+.about-list {
+  margin: 0.5rem 0 0;
+  padding-left: 1.25rem;
+  color: var(--muted);
+}
+
+.about-list li {
+  margin-bottom: 0.35rem;
+}
+
+.agent-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.65rem 1rem;
+  background: #fff5f5;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.9rem;
+}
+
+.agent-banner p {
+  margin: 0;
+}
+
+.agent-banner button {
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--muted);
+  padding: 0.25rem 0.5rem;
+}
+
+.agent-banner a {
+  color: var(--red);
+}
+
 /* FAQ */
 .faq-page {
   padding: 2rem 0 3rem;

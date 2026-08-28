@@ -86,6 +86,13 @@ export function normalizeProductDetail(product) {
   }));
 
   const desc = product.description?.html ?? product.description?.plain ?? '';
+  const descriptionPlain =
+    typeof desc === 'string'
+      ? desc
+          .replace(/<[^>]+>/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim()
+      : '';
   const images = (product.media || []).map((m) => ({
     url: m.url,
     alt: m.alt_text || product.title,
@@ -95,6 +102,7 @@ export function normalizeProductDetail(product) {
     id: product.id,
     title: product.title,
     descriptionHtml: typeof desc === 'string' ? desc : '',
+    descriptionPlain,
     images,
     priceRange: product.price_range
       ? {
