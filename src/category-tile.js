@@ -1,7 +1,10 @@
-import { searchCatalogOriginUnion } from './catalog-client.js';
+import { searchCatalog } from './catalog-client.js';
+import { normalizeProductCard } from './normalize-product.js';
 import { categoryGid, getCategoryBySlug } from './taxonomy.js';
+import { getOriginSearchPhrases } from './origin-query.js';
 
-export const MAX_HOME_TILES_PER_REQUEST = 5;
+/** Homepage can request all ranked categories in one batch (live fallback only). */
+export const MAX_HOME_TILES_PER_REQUEST = 20;
 
 export function parseSlugList(slugsParam) {
   if (!slugsParam) return [];
@@ -17,13 +20,31 @@ export function parseSlugList(slugsParam) {
   return result;
 }
 
-/** searchCatalogOriginUnion returns normalized product cards, not raw catalog rows. */
-function tileFromNormalizedCard(card) {
+function extractPagination(raw) {
+  const content = raw?.structuredContent ?? raw ?? {};
+  return content.pagination ?? {};
+}
+
+function tileFromRawProduct(product) {
+  const card = product ? normalizeProductCard(product) : null;
   if (!card?.image) return null;
   return { image: card.image, imageAlt: card.imageAlt, title: card.title };
 }
 
-export async function fetchCategoryTilePreview(slug, destination) {
+function tileFromSnapshotRow(row) {
+  const tile = row?.tile;
+  if (!tile?.image) return null;
+  return {
+    image: tile.image,
+    imageAlt: tile.imageAlt || tile.title || '',
+    title: tile.title || '',
+  };
+}
+
+/**
+ * One Catalog call per phrase until a preview image is found (usually English only).
+ */
+export async function fetchLiveCategoryTilePreview(slug, destination) {
   const category = getCategoryBySlug(slug);
   if (!category) {
     return {
@@ -35,56 +56,117 @@ export async function fetchCategoryTilePreview(slug, destination) {
     };
   }
 
-  const result = await searchCatalogOriginUnion({
-    userQuery: '',
-    destination,
-    categoryGid: categoryGid(category.slug),
-    limit: 1,
-  });
+  let destinationBlocked = false;
 
-  if (result.destinationBlocked) {
-    return {
-      slug: category.slug,
-      name: category.name,
-      tile: null,
-      destinationBlocked: true,
-      unknown: false,
-    };
+  for (const phrase of getOriginSearchPhrases()) {
+    const raw = await searchCatalog({
+      query: phrase,
+      destination,
+      categoryGid: categoryGid(category.slug),
+      limit: 1,
+    });
+
+    if (raw.destinationBlocked) {
+      destinationBlocked = true;
+      break;
+    }
+
+    const content = raw?.structuredContent ?? raw ?? {};
+    const tile = tileFromRawProduct(content.products?.[0]);
+    if (tile) {
+      return {
+        slug: category.slug,
+        name: category.name,
+        tile,
+        destinationBlocked: false,
+        unknown: false,
+      };
+    }
   }
-
-  const tile = tileFromNormalizedCard(result.products?.[0]);
 
   return {
     slug: category.slug,
     name: category.name,
-    tile,
-    destinationBlocked: false,
+    tile: null,
+    destinationBlocked,
     unknown: false,
   };
 }
 
-export async function fetchCategoryTilePreviews(slugs, destination) {
+/** Used by refresh-category-stats — count + tile in one pass (no extra API calls). */
+export async function fetchCategoryOriginSnapshotRow(category, destination = 'CA') {
+  let eligibleCount = 0;
+  let tile = null;
+  let destinationBlocked = false;
+
+  for (const phrase of getOriginSearchPhrases()) {
+    const raw = await searchCatalog({
+      query: phrase,
+      destination,
+      categoryGid: categoryGid(category.slug),
+      limit: 1,
+    });
+
+    if (raw.destinationBlocked) {
+      destinationBlocked = true;
+      break;
+    }
+
+    eligibleCount = Math.max(eligibleCount, extractPagination(raw).total_count ?? 0);
+
+    if (!tile) {
+      const content = raw?.structuredContent ?? raw ?? {};
+      tile = tileFromRawProduct(content.products?.[0]);
+    }
+  }
+
+  return {
+    slug: category.slug,
+    name: category.name,
+    eligibleCount,
+    tile,
+    destinationBlocked,
+  };
+}
+
+export async function fetchCategoryTilePreview(slug, destination, snapshotRow = null) {
+  const fromSnapshot = tileFromSnapshotRow(snapshotRow);
+  if (fromSnapshot) {
+    const category = getCategoryBySlug(slug);
+    return {
+      slug,
+      name: category?.name ?? snapshotRow?.name ?? null,
+      tile: fromSnapshot,
+      destinationBlocked: false,
+      unknown: !category,
+      source: 'snapshot',
+    };
+  }
+
+  const live = await fetchLiveCategoryTilePreview(slug, destination);
+  return { ...live, source: 'live' };
+}
+
+export async function fetchCategoryTilePreviews(slugs, destination, snapshotBySlug = null) {
   const tiles = {};
   const errors = [];
   let destinationBlocked = false;
 
-  const results = await Promise.all(
-    slugs.map(async (slug) => {
-      try {
-        return await fetchCategoryTilePreview(slug, destination);
-      } catch (err) {
-        errors.push({ slug, message: err.message || 'Catalog request failed' });
-        return { slug, tile: null, destinationBlocked: false, unknown: false };
-      }
-    }),
-  );
-
-  for (const result of results) {
-    tiles[result.slug] = result.unknown ? null : result.tile;
-    if (result.destinationBlocked) destinationBlocked = true;
+  for (const slug of slugs) {
+    try {
+      const snapshotRow = snapshotBySlug?.get(slug) ?? null;
+      const result = await fetchCategoryTilePreview(slug, destination, snapshotRow);
+      tiles[result.slug] = result.unknown ? null : result.tile;
+      if (result.destinationBlocked) destinationBlocked = true;
+    } catch (err) {
+      errors.push({ slug, message: err.message || 'Catalog request failed' });
+      tiles[slug] = null;
+    }
   }
 
   const response = { tiles, destinationBlocked };
   if (errors.length) response.errors = errors;
   return response;
 }
+
+export { tileFromSnapshotRow };

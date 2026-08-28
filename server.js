@@ -10,7 +10,7 @@ import {
   categoryGid,
   getCategoryBySlug,
 } from './src/taxonomy.js';
-import { getCategoryStatsMeta, getSortedCategories } from './src/category-stats.js';
+import { getCategoryStatsMeta, getCategoryStatsSnapshot, getSortedCategories } from './src/category-stats.js';
 import {
   fetchCategoryTilePreview,
   fetchCategoryTilePreviews,
@@ -115,7 +115,10 @@ app.get('/api/catalog/home-tiles', async (req, res) => {
       );
     }
 
-    const result = await fetchCategoryTilePreviews(slugs, req.query.to);
+    const snapshot = getCategoryStatsSnapshot();
+    const snapshotBySlug = new Map(snapshot?.categories?.map((row) => [row.slug, row]) ?? []);
+
+    const result = await fetchCategoryTilePreviews(slugs, req.query.to, snapshotBySlug);
     sendJson(res, result);
   } catch (err) {
     handleApiError(res, err);

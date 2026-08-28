@@ -3,9 +3,9 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { config } from '../src/config.js';
-import { estimateOriginUnionCount } from '../src/catalog-client.js';
+import { fetchCategoryOriginSnapshotRow } from '../src/category-tile.js';
 import { buildOriginCatalogQuery } from '../src/origin-query.js';
-import { ROOT_CATEGORIES, categoryGid } from '../src/taxonomy.js';
+import { ROOT_CATEGORIES } from '../src/taxonomy.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const OUT_PATH = path.join(__dirname, '..', 'data', 'category-stats.json');
@@ -23,19 +23,22 @@ async function main() {
   for (const category of ROOT_CATEGORIES) {
     process.stdout.write(`  ${category.slug} (${category.name})… `);
     try {
-      const { eligibleCount, destinationBlocked } = await estimateOriginUnionCount({
-        destination: 'CA',
-        categoryGid: categoryGid(category.slug),
-      });
+      const row = await fetchCategoryOriginSnapshotRow(category, 'CA');
 
-      if (destinationBlocked) {
+      if (row.destinationBlocked) {
         console.log('blocked (export catalog required)');
         rows.push({ slug: category.slug, name: category.name, eligibleCount: 0 });
         continue;
       }
 
-      console.log(`~${eligibleCount}`);
-      rows.push({ slug: category.slug, name: category.name, eligibleCount });
+      const tileNote = row.tile ? ' + tile' : '';
+      console.log(`~${row.eligibleCount}${tileNote}`);
+      rows.push({
+        slug: category.slug,
+        name: category.name,
+        eligibleCount: row.eligibleCount,
+        ...(row.tile ? { tile: row.tile } : {}),
+      });
     } catch (err) {
       console.log(`error: ${err.message}`);
       rows.push({ slug: category.slug, name: category.name, eligibleCount: 0 });
@@ -55,7 +58,7 @@ async function main() {
     query: queryLabel,
     destination: 'CA',
     note:
-      'eligibleCount is the max pagination.total_count across separate English/French origin phrase searches (union estimate lower bound). Not exact inventory. Pagination capped at 1,000 per phrase.',
+      'eligibleCount is the max pagination.total_count across separate English/French origin phrase searches. tile is a sample preview image from the same pass (refresh quarterly). Not exact inventory.',
     categories: rows,
   };
 
@@ -69,6 +72,7 @@ async function main() {
       slug: r.slug,
       name: r.name,
       eligibleCount: r.eligibleCount,
+      hasTile: Boolean(r.tile?.image),
     })),
   );
   console.log(`\nWrote ${OUT_PATH}`);

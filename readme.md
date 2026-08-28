@@ -70,7 +70,7 @@ Quick summary: push to GitHub → import in [Vercel](https://vercel.com) → add
 
 ## Category ranking (admin)
 
-Homepage categories are ordered **most eligible listings → least**, using a static snapshot in `data/category-stats.json`. Counts come from Catalog `pagination.total_count` (estimates, not exact inventory).
+Homepage categories are ordered **most eligible listings → least**, using a static snapshot in `data/category-stats.json`. The same refresh stores a **sample preview image** per category so the homepage does not call Catalog for every tile on each visit. Listing/search pages still query Catalog live.
 
 Refresh quarterly or after major catalog changes:
 
@@ -78,11 +78,11 @@ Refresh quarterly or after major catalog changes:
 npm run refresh-category-stats
 ```
 
-Origin matching runs **separate Catalog searches** per phrase (`made in Canada`, `fabriqué au Canada`, `fabrique au Canada`) and merges results. Catalog `OR` syntax does not union reliably. Category stats use the **max** count across phrases.
+Origin matching runs **separate Catalog searches** per phrase (`made in Canada`, `fabriqué au Canada`, `fabrique au Canada`) and merges results on listing pages. Category stats use the **max** count across phrases during refresh.
 
 ## API (homepage tiles)
 
-`GET /api/catalog/home-tiles?slugs=ae,hg,aa,me,fb&to=CA` — batch category preview images for the homepage. Up to **5 slugs** per request (matches ranked chunks). Response: `{ destinationBlocked, tiles: { [slug]: { image, imageAlt, title } | null }, errors? }`. The homepage loads tiles in rank order from `/api/categories`, five categories per sequential request.
+`GET /api/catalog/home-tiles?slugs=ae,hg,…&to=CA` — live fallback for categories missing snapshot tiles (up to **20** slugs). Normally tiles ship with `GET /api/categories` from the snapshot.
 
 ## WebMCP (browser agent tools)
 

@@ -135,12 +135,21 @@
       const grid = document.getElementById('category-grid');
       const { categories } = await fetchJson('/api/categories');
 
-      function categoryCard(cat, loading = true) {
+      function tileMarkup(cat, eager = false) {
+        if (cat.tile?.image) {
+          const loading = eager ? 'eager' : 'lazy';
+          return `<img src="${escapeHtml(cat.tile.image)}" alt="${escapeHtml(cat.tile.imageAlt || cat.tile.title)}" loading="${loading}">`;
+        }
+        return '<div class="placeholder">Loading…</div>';
+      }
+
+      function categoryCard(cat, index = 0) {
         const href = withShipsTo(`/category.html?slug=${encodeURIComponent(cat.slug)}`);
+        const eager = index < 5;
         return `
           <a class="category-card" href="${href}" data-slug="${escapeHtml(cat.slug)}">
             <div class="category-card-image" id="tile-${escapeHtml(cat.slug)}">
-              <div class="placeholder">${loading ? 'Loading…' : 'No preview'}</div>
+              ${tileMarkup(cat, eager)}
             </div>
             <div class="category-card-body">
               <h3>${escapeHtml(cat.name)}</h3>
@@ -148,10 +157,7 @@
           </a>`;
       }
 
-      grid.innerHTML = categories.map((c) => categoryCard(c)).join('');
-
-      const TILE_CHUNK_SIZE = 5;
-      const rankedSlugs = categories.map((c) => c.slug);
+      grid.innerHTML = categories.map((c, i) => categoryCard(c, i)).join('');
 
       function paintTile(slug, tile, eager = false) {
         const container = document.getElementById(`tile-${slug}`);
@@ -164,29 +170,27 @@
         }
       }
 
-      async function loadHomeTileChunks(slugs) {
-        for (let i = 0; i < slugs.length; i += TILE_CHUNK_SIZE) {
-          const chunk = slugs.slice(i, i + TILE_CHUNK_SIZE);
-          const eager = i === 0;
-          try {
-            const data = await fetchJson(
-              `/api/catalog/home-tiles?${new URLSearchParams({ slugs: chunk.join(',') })}`,
-            );
-            for (const slug of chunk) {
-              paintTile(slug, data.tiles?.[slug] ?? null, eager);
-            }
-          } catch {
-            for (const slug of chunk) {
-              const container = document.getElementById(`tile-${slug}`);
-              if (container) {
-                container.innerHTML = '<div class="placeholder">Unavailable</div>';
-              }
+      const missingSlugs = categories
+        .filter((c) => !c.tile?.image)
+        .map((c) => c.slug);
+
+      if (missingSlugs.length) {
+        try {
+          const data = await fetchJson(
+            `/api/catalog/home-tiles?${new URLSearchParams({ slugs: missingSlugs.join(',') })}`,
+          );
+          for (const slug of missingSlugs) {
+            paintTile(slug, data.tiles?.[slug] ?? null, categories.findIndex((c) => c.slug === slug) < 5);
+          }
+        } catch {
+          for (const slug of missingSlugs) {
+            const container = document.getElementById(`tile-${slug}`);
+            if (container) {
+              container.innerHTML = '<div class="placeholder">Unavailable</div>';
             }
           }
         }
       }
-
-      await loadHomeTileChunks(rankedSlugs);
     </script>
   </body>
 </html>
