@@ -1,6 +1,6 @@
 import { searchCatalog } from './catalog-client.js';
 import { normalizeProductCard } from './normalize-product.js';
-import { categoryGid, getCategoryBySlug } from './taxonomy.js';
+import { getCategoryBySlug } from './taxonomy.js';
 import { getOriginSearchPhrases } from './origin-query.js';
 
 /** Homepage can request all ranked categories in one batch (live fallback only). */
@@ -62,7 +62,7 @@ export async function fetchLiveCategoryTilePreview(slug, destination) {
     const raw = await searchCatalog({
       query: phrase,
       destination,
-      categoryGid: categoryGid(category.slug),
+      categorySlug: category.slug,
       limit: 1,
     });
 
@@ -103,7 +103,7 @@ export async function fetchCategoryOriginSnapshotRow(category, destination = 'CA
     const raw = await searchCatalog({
       query: phrase,
       destination,
-      categoryGid: categoryGid(category.slug),
+      categorySlug: category.slug,
       limit: 1,
     });
 

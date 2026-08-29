@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "refresh-category-stats": "node scripts/refresh-category-stats.js"
+    "refresh-category-stats": "node scripts/refresh-category-stats.js",
+    "build-taxonomy-index": "node scripts/build-taxonomy-index.js"
   },
   "engines": {
     "node": ">=18"

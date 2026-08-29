@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en-CA">
   <head>
     <meta charset="UTF-8" />
@@ -15,7 +15,11 @@
         </a>
         <form class="search-form" id="header-search">
           <label class="sr-only" for="search-q">Search products</label>
-          <input id="search-q" name="q" type="search" placeholder="Search Canadian products…" />
+          <input
+            id="search-q"
+            name="q"
+            type="search"
+            placeholder="Search Canadian products…" />
           <button type="submit" class="btn btn-primary">Search</button>
         </form>
       </div>
@@ -29,7 +33,7 @@
         <p>
           Buy Canadian is a discovery site that helps you find products from
           Canadian Shopify merchants. We search the Shopify Global Catalog live
-          on each visit — we do not maintain our own product database or cache
+          on each visit. We do not maintain our own product database or cache
           images.
         </p>
       </div>
@@ -38,20 +42,21 @@
         <h2>Are all products made in Canada?</h2>
         <p>
           No. We search catalog text for “made in Canada” and the French
-          equivalent “fabriqué au Canada” (and common spelling variants). We
-          may show a “Mentions made in Canada” badge when returned product copy
+          equivalent “fabriqué au Canada” (and common spelling variants). We may
+          show a “Mentions made in Canada” badge when returned product copy
           includes similar English or French wording. That is not verified
-          manufacturing or customs origin. Many results are from Canadian
-          sellers shipping within Canada.
+          manufacturing or customs origin. What you see are items for sale from
+          Canadian sellers shipping within Canada.
         </p>
       </div>
 
       <div class="faq-item">
         <h2>Who sells these products?</h2>
         <p>
-          Each listing is sold by an independent Shopify merchant. When you
-          click through, you leave Buy Canadian and complete checkout on that
-          merchant’s store. We are not the merchant of record.
+          Each listing is sold by an independent merchant whose online store
+          uses the Shopify platform. When you click through, you leave Buy
+          Canadian and complete checkout on that merchant's store. We are not
+          the merchant of record.
         </p>
       </div>
 
@@ -59,8 +64,22 @@
         <h2>Are prices accurate?</h2>
         <p>
           Prices shown here come from live Catalog data at the time of your
-          search. The merchant’s storefront may show different prices,
-          promotions, or availability.
+          search so are expected to be accurate. The merchant's storefront may
+          show different prices, promotions, or availability.
+        </p>
+      </div>
+
+      <div class="faq-item">
+        <h2>
+          Why isn't &#x1F1E8;&#x1F1E6; product X from &#x1F1E8;&#x1F1E6; store Y
+          shown here?
+        </h2>
+        <p>
+          In order to appear in a category listing here, the product must have
+          the "category" taxonomy selected in the product setup in the
+          merchant's Shopify store. If the category is missing in the product
+          details, the item won't appear in any category here. It may still be
+          discoverable using the Search option.
         </p>
       </div>
 
@@ -75,7 +94,7 @@
       <div class="faq-item">
         <h2>Are you affiliated with Shopify?</h2>
         <p>
-          No. Buy Canadian uses Shopify’s Global Catalog API but is an
+          No. Buy Canadian uses Shopify's Global Catalog API but is an
           independent project and is not affiliated with Shopify Inc.
         </p>
       </div>
@@ -85,7 +104,17 @@
         <p>
           The site currently searches a catalog locked to Canadian buyers and
           shipping within Canada. Support for other destinations is planned for
-          a future update.
+          a future update. If you are a Canadian (or someone who wishes to
+          support Canadian business) living outside of Canada, let me know where
+          you are and I will prioritize adding the option to "ship to" your
+          country when this update takes place.
+        </p>
+        <p>
+          You may find that merchants of items listed on this site ship outside
+          of Canada. I have limited the site to initially show items which ship
+          within Canada, but that doesn't exclude the possibility that they
+          might also ship elsewhere. It's worth taking a look at their shipping
+          policies.
         </p>
       </div>
 
@@ -96,86 +125,91 @@
       <div class="container">
         <div class="footer-grid">
           <div class="footer-disclaimer">
-            <p>
-              Tagline: <strong>By Canadians, For Canadians.</strong>
-            </p>
+            <p>Tagline: <strong>By Canadians, For Canadians.</strong></p>
           </div>
           <div class="footer-meta">
             <label for="ships-to">Ships to</label>
-            <select id="ships-to"><option value="CA">Canada</option></select>
-            <p class="footer-nav"><a href="/about.html">About</a> · <a href="/faq.html">FAQ &amp; disclaimers</a></p>
+            <select id="ships-to">
+              <option value="CA">Canada</option>
+            </select>
+            <p class="footer-nav">
+              <a href="/about.html">About</a> ·
+              <a href="/faq.html">FAQ &amp; disclaimers</a>
+            </p>
           </div>
         </div>
-        <div class="footer-links">&copy; <span id="year"></span> Buy Canadian</div>
+        <div class="footer-links">
+          &copy; <span id="year"></span> Buy Canadian
+        </div>
       </div>
     </footer>
 
     <script type="module" src="/js/webmcp.js"></script>
     <script type="module">
-      import { initFooter, initSearchForm, mountLogoMark } from '/js/app.js';
+      import { initFooter, initSearchForm, mountLogoMark } from "/js/app.js";
       import {
         applyPageSeo,
         injectJsonLd,
         faqPageSchema,
         webSiteSchema,
         breadcrumbSchema,
-      } from '/js/seo.js';
+      } from "/js/seo.js";
 
       const faqItems = [
         {
-          question: 'What is Buy Canadian?',
+          question: "What is Buy Canadian?",
           answer:
-            'Buy Canadian is a discovery site that helps you find products from Canadian Shopify merchants. We search the Shopify Global Catalog live on each visit — we do not maintain our own product database or cache images.',
+            "Buy Canadian is a discovery site that helps you find products from Canadian Shopify merchants. We search the Shopify Global Catalog live on each visit — we do not maintain our own product database or cache images.",
         },
         {
-          question: 'Are all products made in Canada?',
+          question: "Are all products made in Canada?",
           answer:
-            'No. We search for “made in Canada” and “fabriqué au Canada” in catalog text and may show a badge when product copy includes similar English or French wording. That is not verified manufacturing or customs origin.',
+            "No. We search for “made in Canada” and “fabriqué au Canada” in catalog text and may show a badge when product copy includes similar English or French wording. That is not verified manufacturing or customs origin.",
         },
         {
-          question: 'Who sells these products?',
+          question: "Who sells these products?",
           answer:
-            'Each listing is sold by an independent Shopify merchant. Checkout happens on the merchant’s store. Buy Canadian is not the merchant of record.',
+            "Each listing is sold by an independent Shopify merchant. Checkout happens on the merchant’s store. Buy Canadian is not the merchant of record.",
         },
         {
-          question: 'Are prices accurate?',
+          question: "Are prices accurate?",
           answer:
-            'Prices come from live Catalog data at search time. The merchant’s storefront may show different prices or promotions.',
+            "Prices come from live Catalog data at search time. The merchant’s storefront may show different prices or promotions.",
         },
         {
-          question: 'Shipping and returns',
+          question: "Shipping and returns",
           answer:
-            'Shipping and returns are set by each merchant. Buy Canadian does not ship products or process returns.',
+            "Shipping and returns are set by each merchant. Buy Canadian does not ship products or process returns.",
         },
         {
-          question: 'Are you affiliated with Shopify?',
+          question: "Are you affiliated with Shopify?",
           answer:
-            'No. Buy Canadian uses Shopify’s Global Catalog API but is an independent project.',
+            "No. Buy Canadian uses Shopify’s Global Catalog API but is an independent project.",
         },
         {
-          question: 'Shipping outside Canada',
+          question: "Shipping outside Canada",
           answer:
-            'The site currently searches a catalog locked to Canadian buyers and shipping within Canada.',
+            "The site currently searches a catalog locked to Canadian buyers and shipping within Canada.",
         },
       ];
 
       applyPageSeo({
-        title: 'FAQ — Buy Canadian',
+        title: "FAQ — Buy Canadian",
         description:
-          'Frequently asked questions about Buy Canadian — live catalog discovery, made-in-Canada search, merchants, shipping, and disclaimers.',
-        path: '/faq.html',
+          "Frequently asked questions about Buy Canadian — live catalog discovery, made-in-Canada search, merchants, shipping, and disclaimers.",
+        path: "/faq.html",
       });
       injectJsonLd(webSiteSchema());
       injectJsonLd(faqPageSchema(faqItems));
       injectJsonLd(
         breadcrumbSchema([
-          { name: 'Home', path: '/' },
-          { name: 'FAQ', path: '/faq.html' },
+          { name: "Home", path: "/" },
+          { name: "FAQ", path: "/faq.html" },
         ]),
       );
 
       mountLogoMark();
-      document.getElementById('year').textContent = new Date().getFullYear();
+      document.getElementById("year").textContent = new Date().getFullYear();
       initSearchForm();
       initFooter();
     </script>

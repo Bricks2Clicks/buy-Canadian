@@ -7,7 +7,6 @@ import {
   normalizeProductDetail,
 } from './src/normalize-product.js';
 import {
-  categoryGid,
   getCategoryBySlug,
 } from './src/taxonomy.js';
 import { getCategoryStatsMeta, getCategoryStatsSnapshot, getSortedCategories } from './src/category-stats.js';
@@ -38,6 +37,14 @@ function handleApiError(res, err) {
   sendJson(res, { error: err.message || 'Catalog request failed' }, 502);
 }
 
+/** Parse price filter param (minor currency units). Returns undefined if omitted, null if invalid. */
+function parsePriceCents(value) {
+  if (value == null || value === '') return undefined;
+  const n = Number(value);
+  if (!Number.isFinite(n) || !Number.isInteger(n) || n < 0) return null;
+  return n;
+}
+
 app.get('/api/health', (_req, res) => {
   sendJson(res, { ok: true });
 });
@@ -56,6 +63,7 @@ app.get('/api/config', (_req, res) => {
     defaultQuery: config.catalogQuery,
     shippableCountries: SHIPPABLE_COUNTRIES,
     exportCatalogConfigured: Boolean(config.catalogIdExport),
+    maxHomeTilesPerRequest: MAX_HOME_TILES_PER_REQUEST,
   });
 });
 
@@ -67,11 +75,22 @@ app.get('/api/catalog/search', async (req, res) => {
       cursor,
       to,
       limit = '50',
+      priceMin: priceMinRaw,
+      priceMax: priceMaxRaw,
     } = req.query;
 
     const category = categorySlug ? getCategoryBySlug(String(categorySlug)) : null;
     if (categorySlug && !category) {
       return sendJson(res, { error: 'Unknown category' }, 404);
+    }
+
+    const priceMin = parsePriceCents(priceMinRaw);
+    const priceMax = parsePriceCents(priceMaxRaw);
+    if (priceMin === null || priceMax === null) {
+      return sendJson(res, { error: 'Invalid priceMin or priceMax' }, 400);
+    }
+    if (priceMin != null && priceMax != null && priceMin > priceMax) {
+      return sendJson(res, { error: 'priceMin cannot exceed priceMax' }, 400);
     }
 
     const query = q ? String(q) : '';
@@ -80,9 +99,11 @@ app.get('/api/catalog/search', async (req, res) => {
     const normalized = await searchCatalogOriginUnion({
       userQuery: query,
       destination: to,
-      categoryGid: category ? categoryGid(category.slug) : undefined,
+      categorySlug: category ? category.slug : undefined,
       cursor: cursor ? String(cursor) : undefined,
       limit: parsedLimit,
+      priceMin,
+      priceMax,
     });
 
     if (normalized.destinationBlocked) {

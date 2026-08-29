@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en-CA">
   <head>
     <meta charset="UTF-8" />
@@ -6,8 +6,7 @@
     <title>Buy Canadian — By Canadians, For Canadians</title>
     <meta
       name="description"
-      content="Discover products from Canadian Shopify merchants. Live search — no stored catalog."
-    />
+      content="Discover products from Canadian Shopify merchants. Live search — no stored catalog." />
     <link rel="stylesheet" href="/css/styles.css" />
   </head>
   <body>
@@ -24,8 +23,7 @@
             name="q"
             type="search"
             placeholder="Search Canadian products…"
-            autocomplete="off"
-          />
+            autocomplete="off" />
           <button type="submit" class="btn btn-primary">Search</button>
         </form>
       </div>
@@ -52,7 +50,7 @@
 
       <section class="section">
         <div class="container">
-          <h2 class="section-title">Shop by category</h2>
+          <h2 class="section-title">Shop by Category</h2>
           <div class="category-grid" id="category-grid"></div>
         </div>
       </section>
@@ -64,8 +62,8 @@
           <div class="footer-disclaimer">
             <p>
               <strong>Buy Canadian</strong> is a pass-through discovery site. We
-              are not the merchant of record and are not affiliated with
-              Shopify Inc.
+              are not the merchant of record and are not affiliated with Shopify
+              Inc.
             </p>
             <p>
               Prices and availability come from live Catalog data and may change
@@ -105,7 +103,7 @@
         mountLogoMark,
         withShipsTo,
         escapeHtml,
-      } from '/js/app.js';
+      } from "/js/app.js";
       import {
         applyPageSeo,
         injectJsonLd,
@@ -114,12 +112,12 @@
         webApplicationSchema,
         DEFAULT_DESCRIPTION,
         SITE_NAME,
-      } from '/js/seo.js';
+      } from "/js/seo.js";
 
       applyPageSeo({
         title: `${SITE_NAME} — By Canadians, For Canadians`,
         description: DEFAULT_DESCRIPTION,
-        path: '/',
+        path: "/",
       });
       injectJsonLd(webSiteSchema());
       injectJsonLd(organizationSchema());
@@ -127,24 +125,38 @@
 
       mountLogoMark();
 
-      document.getElementById('year').textContent = new Date().getFullYear();
-      document.getElementById('hero-flag').innerHTML = heroSvg();
+      document.getElementById("year").textContent = new Date().getFullYear();
+      document.getElementById("hero-flag").innerHTML = heroSvg();
       initSearchForm();
       initFooter();
 
-      const grid = document.getElementById('category-grid');
-      const { categories } = await fetchJson('/api/categories');
+      const grid = document.getElementById("category-grid");
+      const [{ categories }, siteConfig] = await Promise.all([
+        fetchJson("/api/categories"),
+        fetchJson("/api/config"),
+      ]);
+      const tileBatchSize = siteConfig.maxHomeTilesPerRequest || 5;
+
+      function chunkSlugs(slugs, size) {
+        const batches = [];
+        for (let i = 0; i < slugs.length; i += size) {
+          batches.push(slugs.slice(i, i + size));
+        }
+        return batches;
+      }
 
       function tileMarkup(cat, eager = false) {
         if (cat.tile?.image) {
-          const loading = eager ? 'eager' : 'lazy';
+          const loading = eager ? "eager" : "lazy";
           return `<img src="${escapeHtml(cat.tile.image)}" alt="${escapeHtml(cat.tile.imageAlt || cat.tile.title)}" loading="${loading}">`;
         }
         return '<div class="placeholder">Loading…</div>';
       }
 
       function categoryCard(cat, index = 0) {
-        const href = withShipsTo(`/category.html?slug=${encodeURIComponent(cat.slug)}`);
+        const href = withShipsTo(
+          `/category.html?slug=${encodeURIComponent(cat.slug)}`,
+        );
         const eager = index < 5;
         return `
           <a class="category-card" href="${href}" data-slug="${escapeHtml(cat.slug)}">
@@ -157,13 +169,13 @@
           </a>`;
       }
 
-      grid.innerHTML = categories.map((c, i) => categoryCard(c, i)).join('');
+      grid.innerHTML = categories.map((c, i) => categoryCard(c, i)).join("");
 
       function paintTile(slug, tile, eager = false) {
         const container = document.getElementById(`tile-${slug}`);
         if (!container) return;
         if (tile?.image) {
-          const loading = eager ? 'eager' : 'lazy';
+          const loading = eager ? "eager" : "lazy";
           container.innerHTML = `<img src="${escapeHtml(tile.image)}" alt="${escapeHtml(tile.imageAlt || tile.title)}" loading="${loading}">`;
         } else {
           container.innerHTML = '<div class="placeholder">No preview</div>';
@@ -175,18 +187,25 @@
         .map((c) => c.slug);
 
       if (missingSlugs.length) {
-        try {
-          const data = await fetchJson(
-            `/api/catalog/home-tiles?${new URLSearchParams({ slugs: missingSlugs.join(',') })}`,
-          );
-          for (const slug of missingSlugs) {
-            paintTile(slug, data.tiles?.[slug] ?? null, categories.findIndex((c) => c.slug === slug) < 5);
-          }
-        } catch {
-          for (const slug of missingSlugs) {
-            const container = document.getElementById(`tile-${slug}`);
-            if (container) {
-              container.innerHTML = '<div class="placeholder">Unavailable</div>';
+        for (const batch of chunkSlugs(missingSlugs, tileBatchSize)) {
+          try {
+            const data = await fetchJson(
+              `/api/catalog/home-tiles?${new URLSearchParams({ slugs: batch.join(",") })}`,
+            );
+            for (const slug of batch) {
+              paintTile(
+                slug,
+                data.tiles?.[slug] ?? null,
+                categories.findIndex((c) => c.slug === slug) < 5,
+              );
+            }
+          } catch {
+            for (const slug of batch) {
+              const container = document.getElementById(`tile-${slug}`);
+              if (container) {
+                container.innerHTML =
+                  '<div class="placeholder">Unavailable</div>';
+              }
             }
           }
         }

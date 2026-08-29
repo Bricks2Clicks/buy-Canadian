@@ -4,6 +4,7 @@ import { catalogSemaphore } from './concurrency.js';
 import { destinationContext } from './destination.js';
 import { combineQueryWithOrigin, getOriginSearchPhrases, PRIMARY_ORIGIN_PHRASE } from './origin-query.js';
 import { normalizeSearchResponse } from './normalize-product.js';
+import { getCategoryFilterGidChunks, getCategoryFilterGids } from './taxonomy-index.js';
 
 let rpcId = 0;
 
@@ -72,20 +73,46 @@ async function callCatalogTool(toolName, catalogArgs) {
   });
 }
 
+function decodeChunkCursor(cursor) {
+  if (!cursor) return null;
+  try {
+    const parsed = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8'));
+    if (parsed?.v === 1 && Array.isArray(parsed.c)) return parsed.c;
+  } catch {
+    /* legacy single-chunk cursor */
+  }
+  return [cursor];
+}
+
+function encodeChunkCursor(cursors) {
+  return Buffer.from(JSON.stringify({ v: 1, c: cursors })).toString('base64url');
+}
+
 function buildSearchCatalogArgs({
   query,
   destination,
-  categoryGid,
+  categorySlug,
+  categoryGids,
   cursor,
   limit = 50,
+  priceMin,
+  priceMax,
 }) {
   const dest = destinationContext(destination);
   const filters = {
     available: true,
     ships_to: { country: dest.country },
   };
-  if (categoryGid) {
-    filters.categories = [categoryGid];
+  const gids =
+    categoryGids ??
+    (categorySlug ? getCategoryFilterGids(categorySlug) : null);
+  if (gids?.length) {
+    filters.categories = gids;
+  }
+  if (priceMin != null || priceMax != null) {
+    filters.price = {};
+    if (priceMin != null) filters.price.min = priceMin;
+    if (priceMax != null) filters.price.max = priceMax;
   }
 
   const args = {
@@ -108,6 +135,61 @@ function buildSearchCatalogArgs({
   return args;
 }
 
+async function searchCatalogChunked(options) {
+  const chunks = getCategoryFilterGidChunks(options.categorySlug);
+  const chunkCursors = decodeChunkCursor(options.cursor);
+  const limit = Math.min(Math.max(options.limit ?? 50, 1), 50);
+  const perChunk = Math.max(1, Math.ceil(limit / chunks.length));
+
+  const rawResults = await Promise.all(
+    chunks.map((gids, i) =>
+      callCatalogTool(
+        'search_catalog',
+        buildSearchCatalogArgs({
+          ...options,
+          categorySlug: undefined,
+          categoryGids: gids,
+          cursor: chunkCursors?.[i] ?? undefined,
+          limit: Math.min(perChunk, 50),
+        }),
+      ),
+    ),
+  );
+
+  const seen = new Set();
+  const products = [];
+  const nextCursors = [];
+  let hasNextPage = false;
+  let maxTotalCount = 0;
+
+  for (let i = 0; i < rawResults.length; i++) {
+    const content = rawResults[i]?.structuredContent ?? rawResults[i] ?? {};
+    const pagination = content.pagination ?? {};
+    nextCursors[i] = pagination.has_next_page ? pagination.cursor ?? null : null;
+    if (pagination.has_next_page) hasNextPage = true;
+    if (typeof pagination.total_count === 'number') {
+      maxTotalCount = Math.max(maxTotalCount, pagination.total_count);
+    }
+    for (const product of content.products ?? []) {
+      if (seen.has(product.id)) continue;
+      seen.add(product.id);
+      products.push(product);
+    }
+  }
+
+  return {
+    structuredContent: {
+      products: products.slice(0, limit),
+      pagination: {
+        cursor: hasNextPage ? encodeChunkCursor(nextCursors) : null,
+        has_next_page: hasNextPage,
+        total_count: maxTotalCount || null,
+      },
+    },
+    destinationBlocked: false,
+  };
+}
+
 export async function searchCatalog(options) {
   const dest = destinationContext(options.destination);
   if (dest.exportRequired) {
@@ -116,6 +198,10 @@ export async function searchCatalog(options) {
       pagination: { cursor: null, hasNextPage: false, totalCount: 0 },
       destinationBlocked: true,
     };
+  }
+
+  if (options.categorySlug && getCategoryFilterGidChunks(options.categorySlug).length > 1) {
+    return searchCatalogChunked(options);
   }
 
   const result = await callCatalogTool(
@@ -214,21 +300,25 @@ export function mergeSearchResults(rawResults, limit) {
 export async function searchCatalogOriginUnion({
   userQuery,
   destination,
-  categoryGid,
+  categorySlug,
   cursor,
   limit = 50,
+  priceMin,
+  priceMax,
   originPhrases = getOriginSearchPhrases(),
 }) {
   const parsedLimit = Math.min(Math.max(limit, 1), 50);
+  const priceFilter = { priceMin, priceMax };
 
   if (cursor) {
     const query = combineQueryWithOrigin(userQuery, PRIMARY_ORIGIN_PHRASE);
     const raw = await searchCatalog({
       query,
       destination,
-      categoryGid,
+      categorySlug,
       cursor,
       limit: parsedLimit,
+      ...priceFilter,
     });
     if (raw.destinationBlocked) {
       return { destinationBlocked: true };
@@ -243,8 +333,9 @@ export async function searchCatalogOriginUnion({
       return searchCatalog({
         query,
         destination,
-        categoryGid,
+        categorySlug,
         limit: parsedLimit,
+        ...priceFilter,
       });
     }),
   );
@@ -267,7 +358,7 @@ export async function searchCatalogOriginUnion({
 export async function estimateOriginUnionCount({
   userQuery,
   destination,
-  categoryGid,
+  categorySlug,
   originPhrases = getOriginSearchPhrases(),
 }) {
   const phrases = originPhrases.length ? originPhrases : getOriginSearchPhrases();
@@ -279,7 +370,7 @@ export async function estimateOriginUnionCount({
     const raw = await searchCatalog({
       query,
       destination,
-      categoryGid,
+      categorySlug,
       limit: 1,
     });
     if (raw.destinationBlocked) {

@@ -78,6 +78,12 @@ Refresh quarterly or after major catalog changes:
 npm run refresh-category-stats
 ```
 
+Category browse uses **root + all descendant** Shopify taxonomy IDs (see `data/taxonomy-index.json`). Rebuild after taxonomy updates:
+
+```bash
+npm run build-taxonomy-index
+```
+
 Origin matching runs **separate Catalog searches** per phrase (`made in Canada`, `fabriqué au Canada`, `fabrique au Canada`) and merges results on listing pages. Category stats use the **max** count across phrases during refresh.
 
 ## API (homepage tiles)

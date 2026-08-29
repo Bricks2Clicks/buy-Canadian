@@ -41,10 +41,12 @@ export function escapeHtml(str) {
     .replace(/"/g, '&quot;');
 }
 
-export function productCardHtml(product) {
-  const href = withShipsTo(
-    `/product.html?id=${encodeURIComponent(product.id)}&variant=${encodeURIComponent(product.variantId)}`,
-  );
+export function productCardHtml(product, categorySlug) {
+  let href = `/product.html?id=${encodeURIComponent(product.id)}&variant=${encodeURIComponent(product.variantId)}`;
+  if (categorySlug) {
+    href += `&category=${encodeURIComponent(categorySlug)}`;
+  }
+  href = withShipsTo(href);
   const badge = product.mentionsOrigin
     ? '<span class="badge">Mentions made in Canada</span>'
     : '';
@@ -63,12 +65,29 @@ export function productCardHtml(product) {
     </a>`;
 }
 
-export function renderProductGrid(container, products) {
-  container.innerHTML = products.map(productCardHtml).join('');
+export function renderProductGrid(container, products, categorySlug) {
+  container.innerHTML = products
+    .map((p) => productCardHtml(p, categorySlug))
+    .join('');
 }
 
-export function appendProductGrid(container, products) {
-  container.insertAdjacentHTML('beforeend', products.map(productCardHtml).join(''));
+export function appendProductGrid(container, products, categorySlug) {
+  container.insertAdjacentHTML(
+    'beforeend',
+    products.map((p) => productCardHtml(p, categorySlug)).join(''),
+  );
+}
+
+/** Visible breadcrumb nav. Items: { name, path? }. Last item or missing path = current page. */
+export function breadcrumbHtml(items) {
+  const lis = items.map((item, index) => {
+    const isCurrent = index === items.length - 1 || !item.path;
+    if (isCurrent) {
+      return `<li><span class="breadcrumb-current" aria-current="page">${escapeHtml(item.name)}</span></li>`;
+    }
+    return `<li><a class="breadcrumb-link" href="${escapeHtml(withShipsTo(item.path))}">${escapeHtml(item.name)}</a></li>`;
+  });
+  return `<nav class="breadcrumbs" aria-label="Breadcrumb"><ol class="breadcrumb-list">${lis.join('')}</ol></nav>`;
 }
 
 export async function initFooter() {
@@ -119,3 +138,46 @@ export function showError(el, message) {
 }
 
 export const MAX_PRODUCTS = 1000;
+
+/** Category page price buckets (amounts in minor CAD units). */
+export const PRICE_RANGE_OPTIONS = [
+  { id: 'under25', label: 'Under $25', min: null, max: 2499 },
+  { id: '25-50', label: '$25 – $50', min: 2500, max: 4999 },
+  { id: '50-100', label: '$50 – $100', min: 5000, max: 9999 },
+  { id: '100plus', label: '$100+', min: 10000, max: null },
+];
+
+export function filterProductsByPriceRanges(products, selectedIds) {
+  if (!selectedIds?.length) return products;
+  return products.filter((product) => {
+    const price = product.priceRaw;
+    if (price == null) return false;
+    return selectedIds.some((id) => {
+      const range = PRICE_RANGE_OPTIONS.find((r) => r.id === id);
+      if (!range) return false;
+      if (range.min != null && price < range.min) return false;
+      if (range.max != null && price > range.max) return false;
+      return true;
+    });
+  });
+}
+
+/** Sort products for category listing. sortMode: '' (API order), 'price-asc', 'price-desc'. */
+export function sortProductsForDisplay(products, sortMode) {
+  const list = [...products];
+  if (sortMode === 'price-asc' || sortMode === 'price-desc') {
+    const dir = sortMode === 'price-desc' ? -1 : 1;
+    list.sort((a, b) => {
+      const pa = a.priceRaw;
+      const pb = b.priceRaw;
+      if (pa == null && pb == null) return (a._order ?? 0) - (b._order ?? 0);
+      if (pa == null) return 1;
+      if (pb == null) return -1;
+      if (pa === pb) return (a._order ?? 0) - (b._order ?? 0);
+      return (pa - pb) * dir;
+    });
+    return list;
+  }
+  list.sort((a, b) => (a._order ?? 0) - (b._order ?? 0));
+  return list;
+}

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en-CA">
   <head>
     <meta charset="UTF-8" />
@@ -15,21 +15,62 @@
         </a>
         <form class="search-form" id="header-search">
           <label class="sr-only" for="search-q">Search products</label>
-          <input id="search-q" name="q" type="search" placeholder="Search Canadian products…" />
+          <input
+            id="search-q"
+            name="q"
+            type="search"
+            placeholder="Search Canadian products…" />
           <button type="submit" class="btn btn-primary">Search</button>
         </form>
       </div>
     </header>
 
     <main class="container">
+      <div id="breadcrumb"></div>
       <div class="page-header">
         <h1 id="category-title">Category</h1>
         <p id="category-subtitle">Live results from Canadian merchants</p>
       </div>
+      <div class="category-toolbar" id="category-toolbar">
+        <fieldset class="category-toolbar-field category-toolbar-field--price">
+          <legend>Price</legend>
+          <div class="price-filter-options" id="price-filters">
+            <label class="price-filter-chip">
+              <input type="checkbox" name="price" value="under25" />
+              <span>Under $25</span>
+            </label>
+            <label class="price-filter-chip">
+              <input type="checkbox" name="price" value="25-50" />
+              <span>$25 – $50</span>
+            </label>
+            <label class="price-filter-chip">
+              <input type="checkbox" name="price" value="50-100" />
+              <span>$50 – $100</span>
+            </label>
+            <label class="price-filter-chip">
+              <input type="checkbox" name="price" value="100plus" />
+              <span>$100+</span>
+            </label>
+          </div>
+        </fieldset>
+        <div class="category-toolbar-field">
+          <label for="sort-by">Sort</label>
+          <select id="sort-by" class="category-toolbar-select">
+            <option value="">As listed</option>
+            <option value="price-asc">Price: low to high</option>
+            <option value="price-desc">Price: high to low</option>
+          </select>
+        </div>
+        <p class="category-toolbar-note">
+          Prices in CAD. Price filter and sort apply to loaded results.
+        </p>
+      </div>
       <div id="status"></div>
       <div class="product-grid product-grid--listing" id="product-grid"></div>
       <div class="load-more-wrap" id="load-more-wrap" hidden>
-        <button type="button" class="btn btn-secondary" id="load-more">Load more</button>
+        <button type="button" class="btn btn-secondary" id="load-more">
+          Load more
+        </button>
       </div>
     </main>
 
@@ -45,11 +86,17 @@
           </div>
           <div class="footer-meta">
             <label for="ships-to">Ships to</label>
-            <select id="ships-to"><option value="CA">Canada</option></select>
-            <p class="footer-nav"><a href="/about.html">About</a> · <a href="/faq.html">FAQ</a></p>
+            <select id="ships-to">
+              <option value="CA">Canada</option>
+            </select>
+            <p class="footer-nav">
+              <a href="/about.html">About</a> · <a href="/faq.html">FAQ</a>
+            </p>
           </div>
         </div>
-        <div class="footer-links">&copy; <span id="year"></span> Buy Canadian</div>
+        <div class="footer-links">
+          &copy; <span id="year"></span> Buy Canadian
+        </div>
       </div>
     </footer>
 
@@ -61,38 +108,36 @@
         initSearchForm,
         mountLogoMark,
         renderProductGrid,
-        appendProductGrid,
         showError,
+        sortProductsForDisplay,
+        filterProductsByPriceRanges,
+        PRICE_RANGE_OPTIONS,
+        breadcrumbHtml,
         MAX_PRODUCTS,
-      } from '/js/app.js';
+      } from "/js/app.js";
       import {
         applyPageSeo,
         injectJsonLd,
         breadcrumbSchema,
         itemListSchema,
-      } from '/js/seo.js';
+      } from "/js/seo.js";
 
       mountLogoMark();
       initSearchForm();
       initFooter();
 
       const params = new URLSearchParams(window.location.search);
-      const slug = params.get('slug');
+      const slug = params.get("slug");
       if (!slug) {
-        window.location.href = '/';
-        throw new Error('missing slug');
+        window.location.href = "/";
+        throw new Error("missing slug");
       }
 
-      const statusEl = document.getElementById('status');
-      const grid = document.getElementById('product-grid');
-      const loadMoreWrap = document.getElementById('load-more-wrap');
-      const loadMoreBtn = document.getElementById('load-more');
-
-      const { categories } = await fetchJson('/api/categories');
+      const { categories } = await fetchJson("/api/categories");
       const category = categories.find((c) => c.slug === slug);
-      const categoryName = category?.name || 'Category';
+      const categoryName = category?.name || "Category";
       if (category) {
-        document.getElementById('category-title').textContent = category.name;
+        document.getElementById("category-title").textContent = category.name;
       }
 
       const pagePath = `/category.html?slug=${encodeURIComponent(slug)}`;
@@ -103,46 +148,136 @@
       });
       injectJsonLd(
         breadcrumbSchema([
-          { name: 'Home', path: '/' },
+          { name: "All Categories", path: "/" },
           { name: categoryName, path: pagePath },
         ]),
       );
+
+      document.getElementById("breadcrumb").innerHTML = breadcrumbHtml([
+        { name: "All Categories", path: "/" },
+        { name: categoryName },
+      ]);
+
+      const statusEl = document.getElementById("status");
+      const grid = document.getElementById("product-grid");
+      const loadMoreWrap = document.getElementById("load-more-wrap");
+      const loadMoreBtn = document.getElementById("load-more");
+      const priceFiltersEl = document.getElementById("price-filters");
+      const sortSelect = document.getElementById("sort-by");
+
+      const validPriceIds = new Set(PRICE_RANGE_OPTIONS.map((r) => r.id));
+
+      function getSelectedPriceRanges() {
+        return [...priceFiltersEl.querySelectorAll('input[name="price"]:checked')].map(
+          (el) => el.value,
+        );
+      }
+
+      function readToolbarFromUrl() {
+        const priceParam = params.get("price") || "";
+        const selected = priceParam
+          .split(",")
+          .map((s) => s.trim())
+          .filter((id) => validPriceIds.has(id));
+        for (const input of priceFiltersEl.querySelectorAll('input[name="price"]')) {
+          input.checked = selected.includes(input.value);
+        }
+        const sort = params.get("sort") || "";
+        if (sort === "price-asc" || sort === "price-desc" || sort === "") {
+          sortSelect.value = sort;
+        }
+      }
+
+      function syncToolbarToUrl() {
+        const url = new URL(window.location.href);
+        const selected = getSelectedPriceRanges();
+        if (selected.length) url.searchParams.set("price", selected.join(","));
+        else url.searchParams.delete("price");
+        const sort = sortSelect.value;
+        if (sort) url.searchParams.set("sort", sort);
+        else url.searchParams.delete("sort");
+        window.history.replaceState({}, "", url.pathname + url.search);
+      }
+
+      readToolbarFromUrl();
 
       let schemaInjected = false;
       let cursor = null;
       let totalLoaded = 0;
       let loading = false;
+      let allProducts = [];
+      let nextServerOrder = 0;
+
+      function renderDisplayedProducts() {
+        const filtered = filterProductsByPriceRanges(
+          allProducts,
+          getSelectedPriceRanges(),
+        );
+        renderProductGrid(
+          grid,
+          sortProductsForDisplay(filtered, sortSelect.value),
+          slug,
+        );
+        updateEmptyFilterMessage(filtered.length);
+      }
+
+      function updateEmptyFilterMessage(visibleCount) {
+        if (allProducts.length > 0 && visibleCount === 0) {
+          statusEl.innerHTML =
+            '<p class="status-message">No loaded products match the selected price ranges. Try loading more or clearing filters.</p>';
+        } else if (allProducts.length > 0) {
+          statusEl.innerHTML = "";
+        }
+      }
+
+      function resetListing() {
+        cursor = null;
+        totalLoaded = 0;
+        allProducts = [];
+        nextServerOrder = 0;
+        schemaInjected = false;
+        grid.innerHTML = "";
+      }
+
+      function buildSearchPath() {
+        let path = `/api/catalog/search?category=${encodeURIComponent(slug)}&limit=50`;
+        if (cursor) path += `&cursor=${encodeURIComponent(cursor)}`;
+        return path;
+      }
 
       async function loadPage() {
         if (loading) return;
         loading = true;
         loadMoreBtn.disabled = true;
-        statusEl.innerHTML = totalLoaded === 0 ? '<div class="spinner"></div>' : '';
+        statusEl.innerHTML =
+          totalLoaded === 0 ? '<div class="spinner"></div>' : "";
 
         try {
-          let path = `/api/catalog/search?category=${encodeURIComponent(slug)}&limit=50`;
-          if (cursor) path += `&cursor=${encodeURIComponent(cursor)}`;
-
-          const data = await fetchJson(path);
+          const data = await fetchJson(buildSearchPath());
           if (data.destinationBlocked) {
             showError(statusEl, data.message);
             loadMoreWrap.hidden = true;
             return;
           }
 
-          if (totalLoaded === 0) {
-            renderProductGrid(grid, data.products);
-            if (data.products.length && !schemaInjected) {
-              injectJsonLd(
-                itemListSchema(data.products, `${categoryName} — Buy Canadian`, pagePath),
-              );
-              schemaInjected = true;
-            }
-          } else {
-            appendProductGrid(grid, data.products);
+          for (const product of data.products) {
+            allProducts.push({ ...product, _order: nextServerOrder++ });
           }
 
-          totalLoaded += data.products.length;
+          renderDisplayedProducts();
+
+          if (allProducts.length && !schemaInjected) {
+            injectJsonLd(
+              itemListSchema(
+                allProducts,
+                `${categoryName} — Buy Canadian`,
+                pagePath,
+              ),
+            );
+            schemaInjected = true;
+          }
+
+          totalLoaded = allProducts.length;
           cursor = data.pagination.cursor;
           const hasNext =
             data.pagination.hasNextPage && totalLoaded < MAX_PRODUCTS;
@@ -151,7 +286,9 @@
             statusEl.innerHTML =
               '<p class="status-message">No in-stock products found in this category right now.</p>';
           } else {
-            statusEl.innerHTML = '';
+            updateEmptyFilterMessage(
+              filterProductsByPriceRanges(allProducts, getSelectedPriceRanges()).length,
+            );
           }
 
           loadMoreWrap.hidden = !hasNext;
@@ -163,7 +300,18 @@
         }
       }
 
-      loadMoreBtn.addEventListener('click', loadPage);
+      function applyPriceFilter() {
+        syncToolbarToUrl();
+        renderDisplayedProducts();
+      }
+
+      priceFiltersEl.addEventListener("change", applyPriceFilter);
+      sortSelect.addEventListener("change", () => {
+        syncToolbarToUrl();
+        renderDisplayedProducts();
+      });
+
+      loadMoreBtn.addEventListener("click", loadPage);
       loadPage();
     </script>
   </body>

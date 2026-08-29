@@ -23,7 +23,13 @@ html {
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial,
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
     sans-serif;
   color: var(--text);
   background: var(--white);
@@ -45,6 +51,10 @@ a:hover {
 img {
   max-width: 100%;
   display: block;
+}
+
+p {
+  padding-bottom: 1rem;
 }
 
 .container {
@@ -242,7 +252,9 @@ img {
   overflow: hidden;
   background: var(--white);
   box-shadow: var(--shadow);
-  transition: transform 0.15s, box-shadow 0.15s;
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s;
   color: inherit;
   text-decoration: none;
 }
@@ -589,6 +601,46 @@ img {
   padding: 1.5rem 0 0.5rem;
 }
 
+.breadcrumbs {
+  padding: 1rem 0 0;
+  font-size: 0.875rem;
+}
+
+.breadcrumb-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.breadcrumb-list li {
+  display: flex;
+  align-items: center;
+}
+
+.breadcrumb-list li:not(:last-child)::after {
+  content: "/";
+  margin: 0 0.5rem;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.breadcrumb-link {
+  color: var(--red);
+  text-decoration: none;
+}
+
+.breadcrumb-link:hover {
+  text-decoration: underline;
+}
+
+.breadcrumb-current {
+  color: var(--muted);
+}
+
 .page-header h1 {
   margin: 0 0 0.35rem;
 }
@@ -596,6 +648,95 @@ img {
 .page-header p {
   margin: 0;
   color: var(--muted);
+}
+
+.category-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem 1.5rem;
+  padding: 0.75rem 0 1rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 0.5rem;
+}
+
+.category-toolbar-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.category-toolbar-field legend {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--muted);
+  padding: 0;
+  margin-bottom: 0.35rem;
+}
+
+.category-toolbar-field--price {
+  border: none;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.price-filter-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.price-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.price-filter-chip:has(input:checked) {
+  border-color: var(--red);
+  background: rgba(200, 16, 46, 0.08);
+}
+
+.price-filter-chip input {
+  accent-color: var(--red);
+}
+
+.category-toolbar-field label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.category-toolbar-select {
+  min-width: 10rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: inherit;
+  font: inherit;
+}
+
+.category-toolbar-note {
+  flex: 1 1 100%;
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+@media (min-width: 640px) {
+  .category-toolbar-note {
+    flex: 1 1 auto;
+    margin: 0 0 0.1rem;
+    align-self: flex-end;
+  }
 }
 
 .spinner {

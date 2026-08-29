@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en-CA">
   <head>
     <meta charset="UTF-8" />
@@ -6,8 +6,7 @@
     <title>About — Buy Canadian</title>
     <meta
       name="description"
-      content="Who built Buy Canadian, why it exists, and how live Shopify Global Catalog discovery works for Canadian shoppers."
-    />
+      content="Who built Buy Canadian, why it exists, and how live Shopify Global Catalog discovery works for Canadian shoppers." />
     <link rel="stylesheet" href="/css/styles.css" />
   </head>
   <body>
@@ -19,7 +18,11 @@
         </a>
         <form class="search-form" id="header-search">
           <label class="sr-only" for="search-q">Search products</label>
-          <input id="search-q" name="q" type="search" placeholder="Search Canadian products…" />
+          <input
+            id="search-q"
+            name="q"
+            type="search"
+            placeholder="Search Canadian products…" />
           <button type="submit" class="btn btn-primary">Search</button>
         </form>
       </div>
@@ -32,9 +35,13 @@
       <div class="faq-item">
         <h2>Who built this</h2>
         <p>
-          Buy Canadian was created by <strong>[Your name]</strong>, who runs
-          <a href="https://bricks2clicks.online" rel="noopener">Bricks2Clicks</a>.
-          [One-line bio — e.g. why you build commerce and discovery tools for Canadian businesses.]
+          Buy Canadian was created by <strong>Sue Steckle</strong>, who is a
+          proud Canadian (born & raised in rural Ontario) and runs
+          <a href="https://bricks2clicks.online" rel="noopener">Bricks2Clicks</a
+          >, a Shopify development and consulting agency, located in Calgary.
+          Sue helps merchants build and launch their Shopify stores, improve
+          their stores, and assists with marketing integrations like Klaviyo and
+          Google's properties. She helps Shopify store owners solve problems.
         </p>
         <p>
           This is an independent project. Buy Canadian is not affiliated with
@@ -46,25 +53,35 @@
       <div class="faq-item">
         <h2>Why it exists</h2>
         <p>
-          Canadians increasingly want to find and buy from domestic merchants, but
-          product origin is hard to verify and no single store lists everything
-          Canadian. Buy Canadian searches the
-          <a href="https://shopify.dev/docs/agents/catalog" rel="noopener">Shopify Global Catalog</a>
-          live on every visit — fresh results, no copied catalog — and surfaces
+          Canadians increasingly (cough, cough) want to find and buy from
+          Canadian merchants, but product origin is hard to verify and no single
+          store lists everything Canadian. Buy Canadian searches the
+          <a href="https://shopify.dev/docs/agents/catalog" rel="noopener"
+            >Shopify Global Catalog</a
+          >
+          live on every visit, so what you see here are fresh results every time
+          you load the site (no stale, copied catalog here!), which shows you
           products from Canadian sellers with a best-effort English and French
           origin search filter (“made in Canada” / “fabriqué au Canada”).
+        </p>
+        <p>
+          The quality of the results depends on the quality of individual
+          merchant listings within their own stores. This site shows items that
+          are sold by and shipped from Canadian stores, and if the product
+          description mentions that it is made in Canada, that is indicated on
+          the individual item's listing.
         </p>
       </div>
 
       <div class="faq-item">
         <h2>How it works</h2>
         <p>
-          Buy Canadian is a pass-through discovery site. We do not store product
-          listings, prices, or images. Each page load runs live
+          Buy Canadian is a pass-through discovery site. We do not store any
+          product listings, prices, or images. Each page load runs live
           <code>search_catalog</code> and <code>get_product</code> calls through
           a small server proxy with Canadian shipping filters. When you find
-          something you like, you complete purchase on the merchant’s own Shopify
-          store.
+          something you like, you complete purchase on the merchant's own
+          Shopify store.
         </p>
       </div>
 
@@ -73,25 +90,29 @@
         <p>
           Buy Canadian is built for humans and in-browser AI assistants working
           together. The site publishes a UCP agent profile at
-          <a href="/.well-known/ucp-agent.json"><code>/.well-known/ucp-agent.json</code></a>
+          <a href="/.well-known/ucp-agent.json"
+            ><code>/.well-known/ucp-agent.json</code></a
+          >
           for server-side catalog capabilities, and registers
-          <strong>WebMCP</strong> tools in supporting browsers so an assistant in
-          the same tab can list categories, search products, fetch details, and
-          navigate the visible UI alongside you.
+          <strong>WebMCP</strong> tools in supporting browsers so an assistant
+          in the same tab can list categories, search products, fetch details,
+          and navigate the visible UI alongside you.
         </p>
         <p>Registered WebMCP tools:</p>
         <ul class="about-list">
           <li><code>list_categories</code> — ranked category list</li>
           <li><code>search_products</code> — live catalog search</li>
           <li><code>get_product_details</code> — full product by id</li>
-          <li><code>open_product_page</code> — navigate to a product in this tab</li>
-          <li><code>open_category_page</code> — navigate to a category listing</li>
+          <li>
+            <code>open_product_page</code> — navigate to a product in this tab
+          </li>
+          <li>
+            <code>open_category_page</code> — navigate to a category listing
+          </li>
         </ul>
         <p>
           Test in the ChatGPT desktop in-app browser or Chrome 149+ with WebMCP
-          enabled. See the
-          <a href="https://github.com/Bricks2Clicks/buy-Canadian" rel="noopener">GitHub repository</a>
-          for judge testing instructions.
+          enabled.
         </p>
       </div>
 
@@ -99,11 +120,20 @@
         <h2>Credits &amp; licenses</h2>
         <p>
           Maple leaf icons created by
-          <a href="https://www.flaticon.com/free-icons/maple-leaf" title="maple leaf icons" rel="noopener">Magnific — Flaticon</a>.
+          <a
+            href="https://www.flaticon.com/free-icons/maple-leaf"
+            title="maple leaf icons"
+            rel="noopener"
+            >Magnific — Flaticon</a
+          >.
         </p>
         <p>
           Source code is available under the
-          <a href="https://github.com/Bricks2Clicks/buy-Canadian/blob/main/LICENSE" rel="noopener">MIT License</a>.
+          <a
+            href="https://github.com/Bricks2Clicks/buy-Canadian/blob/main/LICENSE"
+            rel="noopener"
+            >MIT License</a
+          >.
         </p>
       </div>
 
@@ -114,43 +144,48 @@
       <div class="container">
         <div class="footer-grid">
           <div class="footer-disclaimer">
-            <p>
-              Tagline: <strong>By Canadians, For Canadians.</strong>
-            </p>
+            <p>Tagline: <strong>By Canadians, For Canadians.</strong></p>
           </div>
           <div class="footer-meta">
             <label for="ships-to">Ships to</label>
-            <select id="ships-to"><option value="CA">Canada</option></select>
-            <p class="footer-nav"><a href="/about.html">About</a> · <a href="/faq.html">FAQ &amp; disclaimers</a></p>
+            <select id="ships-to">
+              <option value="CA">Canada</option>
+            </select>
+            <p class="footer-nav">
+              <a href="/about.html">About</a> ·
+              <a href="/faq.html">FAQ &amp; disclaimers</a>
+            </p>
           </div>
         </div>
-        <div class="footer-links">&copy; <span id="year"></span> Buy Canadian</div>
+        <div class="footer-links">
+          &copy; <span id="year"></span> Buy Canadian
+        </div>
       </div>
     </footer>
 
     <script type="module" src="/js/webmcp.js"></script>
     <script type="module">
-      import { initFooter, initSearchForm, mountLogoMark } from '/js/app.js';
+      import { initFooter, initSearchForm, mountLogoMark } from "/js/app.js";
       import {
         applyPageSeo,
         injectJsonLd,
         aboutPageSchema,
         webSiteSchema,
         organizationSchema,
-      } from '/js/seo.js';
+      } from "/js/seo.js";
 
       applyPageSeo({
-        title: 'About — Buy Canadian',
+        title: "About — Buy Canadian",
         description:
-          'Who built Buy Canadian, why it exists, and how live catalog discovery works for Canadian shoppers and AI assistants.',
-        path: '/about.html',
+          "Who built Buy Canadian, why it exists, and how live catalog discovery works for Canadian shoppers and AI assistants.",
+        path: "/about.html",
       });
       injectJsonLd(webSiteSchema());
       injectJsonLd(organizationSchema());
       injectJsonLd(aboutPageSchema());
 
       mountLogoMark();
-      document.getElementById('year').textContent = new Date().getFullYear();
+      document.getElementById("year").textContent = new Date().getFullYear();
       initSearchForm();
       initFooter();
     </script>

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en-CA">
   <head>
     <meta charset="UTF-8" />
@@ -15,13 +15,18 @@
         </a>
         <form class="search-form" id="header-search">
           <label class="sr-only" for="search-q">Search products</label>
-          <input id="search-q" name="q" type="search" placeholder="Search Canadian products…" />
+          <input
+            id="search-q"
+            name="q"
+            type="search"
+            placeholder="Search Canadian products…" />
           <button type="submit" class="btn btn-primary">Search</button>
         </form>
       </div>
     </header>
 
     <main class="container">
+      <div id="breadcrumb"></div>
       <div id="status"><div class="spinner"></div></div>
       <div id="product-root" hidden></div>
     </main>
@@ -31,18 +36,24 @@
         <div class="footer-grid">
           <div class="footer-disclaimer">
             <p>
-              You will complete purchase on the merchant’s Shopify store. Buy
-              Canadian is not the seller and does not handle payments or
-              shipping.
+              You will complete purchase on the merchant's store. Buy Canadian
+              is not the seller and does not handle payments or shipping. Taxes
+              and shipping are calculated on the merchant's store at checkout.
             </p>
           </div>
           <div class="footer-meta">
             <label for="ships-to">Ships to</label>
-            <select id="ships-to"><option value="CA">Canada</option></select>
-            <p class="footer-nav"><a href="/about.html">About</a> · <a href="/faq.html">FAQ</a></p>
+            <select id="ships-to">
+              <option value="CA">Canada</option>
+            </select>
+            <p class="footer-nav">
+              <a href="/about.html">About</a> · <a href="/faq.html">FAQ</a>
+            </p>
           </div>
         </div>
-        <div class="footer-links">&copy; <span id="year"></span> Buy Canadian</div>
+        <div class="footer-links">
+          &copy; <span id="year"></span> Buy Canadian
+        </div>
       </div>
     </footer>
 
@@ -55,13 +66,14 @@
         mountLogoMark,
         escapeHtml,
         showError,
-      } from '/js/app.js';
+        breadcrumbHtml,
+      } from "/js/app.js";
       import {
         applyPageSeo,
         injectJsonLd,
         breadcrumbSchema,
         productSchema,
-      } from '/js/seo.js';
+      } from "/js/seo.js";
 
       mountLogoMark();
 
@@ -69,18 +81,45 @@
       initFooter();
 
       const params = new URLSearchParams(window.location.search);
-      const id = params.get('id');
-      const variantParam = params.get('variant');
+      const id = params.get("id");
+      const variantParam = params.get("variant");
+      const categorySlug = params.get("category");
 
       if (!id) {
-        window.location.href = '/';
-        throw new Error('missing id');
+        window.location.href = "/";
+        throw new Error("missing id");
       }
 
-      const statusEl = document.getElementById('status');
-      const root = document.getElementById('product-root');
+      const statusEl = document.getElementById("status");
+      const root = document.getElementById("product-root");
+      const breadcrumbEl = document.getElementById("breadcrumb");
 
       let selectedVariantId = variantParam;
+      let categoriesList = [];
+
+      if (categorySlug) {
+        try {
+          const { categories } = await fetchJson("/api/categories");
+          categoriesList = categories;
+        } catch {
+          /* breadcrumb falls back to Home > product */
+        }
+      }
+
+      function buildBreadcrumbItems(product) {
+        const items = [{ name: "All Categories", path: "/" }];
+        if (categorySlug) {
+          const cat = categoriesList.find((c) => c.slug === categorySlug);
+          if (cat) {
+            items.push({
+              name: cat.name,
+              path: `/category.html?slug=${encodeURIComponent(categorySlug)}`,
+            });
+          }
+        }
+        items.push({ name: product.title });
+        return items;
+      }
 
       function render(product) {
         const variants = product.variants || [];
@@ -91,28 +130,28 @@
 
         const mainImage =
           product.images?.[0]?.url ||
-          'data:image/svg+xml,' +
+          "data:image/svg+xml," +
             encodeURIComponent(
               '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect fill="#f3f3f3" width="100%" height="100%"/></svg>',
             );
 
         const badge = product.mentionsOrigin
           ? '<span class="badge">Mentions made in Canada</span>'
-          : '';
+          : "";
 
         const variantButtons =
           variants.length > 1
             ? `<div class="variant-list">${variants
                 .map(
                   (v) =>
-                    `<button type="button" class="variant-option ${v.id === selectedVariantId ? 'selected' : ''}" data-variant="${escapeHtml(v.id)}">${escapeHtml(v.title || v.price)} — ${escapeHtml(v.price)}</button>`,
+                    `<button type="button" class="variant-option ${v.id === selectedVariantId ? "selected" : ""}" data-variant="${escapeHtml(v.id)}">${escapeHtml(v.title || v.price)} — ${escapeHtml(v.price)}</button>`,
                 )
-                .join('')}</div>`
-            : '';
+                .join("")}</div>`
+            : "";
 
-        const price = active?.price || product.priceRange?.min || '';
-        const seller = active?.sellerName || '';
-        const buyUrl = active?.buyUrl || '#';
+        const price = active?.price || product.priceRange?.min || "";
+        const seller = active?.sellerName || "";
+        const buyUrl = active?.buyUrl || "#";
 
         root.innerHTML = `
           <div class="product-detail">
@@ -125,14 +164,14 @@
               ${badge}
               <h1>${escapeHtml(product.title)}</h1>
               <div class="product-price">${escapeHtml(price)}</div>
-              ${seller ? `<div class="product-seller">Sold by ${escapeHtml(seller)}</div>` : ''}
+              ${seller ? `<div class="product-seller">Sold by ${escapeHtml(seller)}</div>` : ""}
               ${variantButtons}
               <div class="cta-block">
                 <a class="btn btn-primary" id="buy-cta" href="${escapeHtml(buyUrl)}" target="_blank" rel="noopener">
                   Go to this store to learn more or purchase
                 </a>
                 <p class="cta-note">
-                  Opens the merchant’s product page in a new tab. Prices and
+                  Opens the merchant's product page in a new tab. Prices and
                   availability are live from the Catalog and may differ on the
                   store.
                 </p>
@@ -140,54 +179,67 @@
               ${
                 product.descriptionHtml
                   ? `<div class="product-description">${product.descriptionHtml}</div>`
-                  : ''
+                  : ""
               }
             </div>
           </div>`;
 
         root.hidden = false;
-        statusEl.innerHTML = '';
+        statusEl.innerHTML = "";
 
-        const pagePath = `/product.html?id=${encodeURIComponent(product.id)}${selectedVariantId ? `&variant=${encodeURIComponent(selectedVariantId)}` : ''}`;
+        const pagePath = `/product.html?id=${encodeURIComponent(product.id)}${selectedVariantId ? `&variant=${encodeURIComponent(selectedVariantId)}` : ""}${categorySlug ? `&category=${encodeURIComponent(categorySlug)}` : ""}`;
+        const breadcrumbItems = buildBreadcrumbItems(product);
+        breadcrumbEl.innerHTML = breadcrumbHtml(breadcrumbItems);
+
         applyPageSeo({
           title: `${product.title} — Buy Canadian`,
           description:
             product.descriptionPlain?.slice(0, 155) ||
             `${product.title} from a Canadian Shopify merchant. Live catalog listing — checkout on the merchant's store.`,
           path: pagePath,
-          type: 'product',
+          type: "product",
           image: product.images?.[0]?.url,
         });
         injectJsonLd(
-          breadcrumbSchema([
-            { name: 'Home', path: '/' },
-            { name: product.title, path: pagePath },
-          ]),
+          breadcrumbSchema(
+            breadcrumbItems.map((item, index) => {
+              if (index < breadcrumbItems.length - 1 && item.path) {
+                return { name: item.name, path: item.path };
+              }
+              return { name: item.name, path: pagePath };
+            }),
+          ),
         );
         injectJsonLd(productSchema(product, pagePath));
 
-        root.querySelectorAll('.variant-option').forEach((btn) => {
-          btn.addEventListener('click', () => {
+        root.querySelectorAll(".variant-option").forEach((btn) => {
+          btn.addEventListener("click", () => {
             selectedVariantId = btn.dataset.variant;
             const v = variants.find((x) => x.id === selectedVariantId);
             if (!v) return;
-            root.querySelectorAll('.variant-option').forEach((b) =>
-              b.classList.toggle('selected', b.dataset.variant === selectedVariantId),
-            );
-            root.querySelector('.product-price').textContent = v.price;
-            document.getElementById('buy-cta').href = v.buyUrl;
+            root
+              .querySelectorAll(".variant-option")
+              .forEach((b) =>
+                b.classList.toggle(
+                  "selected",
+                  b.dataset.variant === selectedVariantId,
+                ),
+              );
+            root.querySelector(".product-price").textContent = v.price;
+            document.getElementById("buy-cta").href = v.buyUrl;
           });
         });
       }
 
       try {
         let path = `/api/catalog/product?id=${encodeURIComponent(id)}`;
-        if (variantParam) path += `&variant=${encodeURIComponent(variantParam)}`;
+        if (variantParam)
+          path += `&variant=${encodeURIComponent(variantParam)}`;
         const data = await fetchJson(path);
         if (data.destinationBlocked) {
           showError(statusEl, data.message);
         } else if (!data.product) {
-          showError(statusEl, 'Product not found or out of stock.');
+          showError(statusEl, "Product not found or out of stock.");
         } else {
           render(data.product);
         }
