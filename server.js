@@ -2,7 +2,7 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { config, SHIPPABLE_COUNTRIES } from './src/config.js';
-import { CatalogRateLimitError, getProduct, searchCatalogOriginUnion } from './src/catalog-client.js';
+import { CatalogRateLimitError, getProduct, parseOriginPass, searchCatalogOriginUnion } from './src/catalog-client.js';
 import {
   normalizeProductDetail,
 } from './src/normalize-product.js';
@@ -87,7 +87,9 @@ app.get('/api/catalog/search', async (req, res) => {
       limit = '50',
       priceMin: priceMinRaw,
       priceMax: priceMaxRaw,
+      originPass: originPassRaw,
     } = req.query;
+    const originPass = parseOriginPass(originPassRaw);
 
     const category = categorySlug ? getCategoryBySlug(String(categorySlug)) : null;
     if (categorySlug && !category) {
@@ -117,6 +119,7 @@ app.get('/api/catalog/search', async (req, res) => {
         limit: parsedLimit,
         priceMin: priceMin ?? '',
         priceMax: priceMax ?? '',
+        originPass,
       }),
       () =>
         searchCatalogOriginUnion({
@@ -127,6 +130,7 @@ app.get('/api/catalog/search', async (req, res) => {
           limit: parsedLimit,
           priceMin,
           priceMax,
+          originPass,
         }),
     );
 

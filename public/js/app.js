@@ -33,6 +33,17 @@ export async function fetchJson(path) {
   return res.json();
 }
 
+export function withOriginPass(path, originPass) {
+  const sep = path.includes('?') ? '&' : '?';
+  return `${path}${sep}originPass=${encodeURIComponent(originPass)}`;
+}
+
+/** French origin pass only on the first page, and only when English is short of a full page. */
+export function needsFrenchOriginPass(data, requestHadCursor, limit = 50) {
+  if (requestHadCursor || data?.destinationBlocked) return false;
+  return (data?.products?.length ?? 0) < limit;
+}
+
 export function escapeHtml(str) {
   return String(str ?? '')
     .replace(/&/g, '&amp;')

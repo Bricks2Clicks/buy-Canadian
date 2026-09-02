@@ -26,7 +26,19 @@ function sleep(ms) {
 
 export function isRateLimited(status, body) {
   if (status === 429) return true;
-  const msg = JSON.stringify(body || '').toLowerCase();
+  const products =
+    body?.result?.structuredContent?.products ??
+    body?.result?.products ??
+    body?.products;
+  if (status < 400 && Array.isArray(products) && products.length > 0) {
+    return false;
+  }
+  const parts = [];
+  if (body?.error) parts.push(body.error);
+  if (body?.result?.isError) parts.push(body.result);
+  if (typeof body?.message === 'string') parts.push(body.message);
+  if (!parts.length) return false;
+  const msg = JSON.stringify(parts).toLowerCase();
   return (
     msg.includes('rate limit') ||
     msg.includes('throttl') ||
@@ -36,7 +48,7 @@ export function isRateLimited(status, body) {
   );
 }
 
-async function callCatalogTool(toolName, catalogArgs) {
+async function callCatalogTool(toolName, catalogArgs, { maxRetries = config.maxRetries } = {}) {
   return catalogSemaphore.run(async () => {
     const token = await getAccessToken();
     const body = {
@@ -57,7 +69,7 @@ async function callCatalogTool(toolName, catalogArgs) {
     };
 
     let lastError;
-    for (let attempt = 0; attempt <= config.maxRetries; attempt++) {
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
       const res = await fetch(config.catalogMcpUrl, {
         method: 'POST',
         headers: {
@@ -70,9 +82,10 @@ async function callCatalogTool(toolName, catalogArgs) {
       const data = await res.json().catch(() => ({}));
 
       if (isRateLimited(res.status, data)) {
+        lastError = new CatalogRateLimitError();
+        if (attempt >= maxRetries) break;
         const delay = config.retryBaseMs * 2 ** attempt + Math.random() * 200;
         await sleep(delay);
-        lastError = new CatalogRateLimitError();
         continue;
       }
 
@@ -198,16 +211,25 @@ async function searchCatalogChunked(options) {
     if (chunksThisRequest >= MAX_CHUNKS_PER_REQUEST) break;
 
     const remaining = limit - products.length;
-    const raw = await callCatalogTool(
-      'search_catalog',
-      buildSearchCatalogArgs({
-        ...options,
-        categorySlug: undefined,
-        categoryGids: chunks[chunkIndex],
-        cursor: resume,
-        limit: Math.min(Math.max(remaining, 1), 50),
-      }),
-    );
+    let raw;
+    try {
+      raw = await callCatalogTool(
+        'search_catalog',
+        buildSearchCatalogArgs({
+          ...options,
+          categorySlug: undefined,
+          categoryGids: chunks[chunkIndex],
+          cursor: resume,
+          limit: Math.min(Math.max(remaining, 1), 50),
+        }),
+        { maxRetries: products.length > 0 ? 0 : config.maxRetries },
+      );
+    } catch (err) {
+      if (err instanceof CatalogRateLimitError && products.length > 0) {
+        break;
+      }
+      throw err;
+    }
     chunksThisRequest += 1;
 
     const content = extractChunkContent(raw);
@@ -352,9 +374,84 @@ export function mergeSearchResults(rawResults, limit, expectedCurrency) {
   };
 }
 
+export function parseOriginPass(value) {
+  const v = String(value || 'all').toLowerCase();
+  if (v === 'en' || v === 'primary' || v === 'english') return 'en';
+  if (v === 'fr' || v === 'secondary' || v === 'french') return 'fr';
+  return 'all';
+}
+
+function originUnionPayload(products, pagination, expectedCurrency, parsedLimit) {
+  return {
+    destinationBlocked: false,
+    products: products
+      .filter((p) => matchesExpectedCurrency(p.currency, expectedCurrency))
+      .slice(0, parsedLimit),
+    pagination,
+  };
+}
+
+/**
+ * Merge secondary origin phrases into `products`. A 429 on a later phrase keeps
+ * whatever was already collected instead of failing the whole listing.
+ */
+async function mergeSecondaryOriginPhrases({
+  phrases,
+  userQuery,
+  destination,
+  categorySlug,
+  parsedLimit,
+  priceFilter,
+  expectedCurrency,
+  products,
+  seen,
+  maxTotalCount,
+}) {
+  let total = maxTotalCount;
+  for (const phrase of phrases) {
+    if (products.length >= parsedLimit) break;
+    let raw;
+    try {
+      raw = await searchCatalog({
+        query: combineQueryWithOrigin(userQuery, phrase),
+        destination,
+        categorySlug,
+        limit: parsedLimit,
+        ...priceFilter,
+      });
+    } catch (err) {
+      if (err instanceof CatalogRateLimitError) {
+        break;
+      }
+      throw err;
+    }
+    if (raw.destinationBlocked) {
+      break;
+    }
+    const extra = normalizeSearchResponse(raw, undefined, expectedCurrency);
+    if (typeof extra.pagination.totalCount === 'number') {
+      total =
+        typeof total === 'number'
+          ? Math.max(total, extra.pagination.totalCount)
+          : extra.pagination.totalCount;
+    }
+    for (const product of extra.products) {
+      if (seen.has(product.id)) continue;
+      seen.add(product.id);
+      products.push(product);
+      if (products.length >= parsedLimit) break;
+    }
+  }
+  return total;
+}
+
 /**
  * Search English first; add French only if the page is still short of `limit`.
  * Paginated requests (cursor set) use the primary English phrase only.
+ *
+ * `originPass`: `en` skips French, `fr` runs French only (for a follow-up
+ * request after English is already on screen), `all` keeps the combined path
+ * used by WebMCP. French 429s never discard English products.
  */
 export async function searchCatalogOriginUnion({
   userQuery,
@@ -365,13 +462,17 @@ export async function searchCatalogOriginUnion({
   priceMin,
   priceMax,
   originPhrases = getOriginSearchPhrases(),
+  originPass: originPassRaw = 'all',
 }) {
   const parsedLimit = Math.min(Math.max(limit, 1), 50);
+  const originPass = parseOriginPass(originPassRaw);
   const priceFilter = { priceMin, priceMax };
   const dest = destinationContext(destination);
   const expectedCurrency = dest.currency;
+  const phrases = originPhrases.length ? originPhrases : getOriginSearchPhrases();
+  const [primary, ...rest] = phrases;
 
-  if (cursor) {
+  if (cursor && originPass !== 'fr') {
     const query = combineQueryWithOrigin(userQuery, PRIMARY_ORIGIN_PHRASE);
     const raw = await searchCatalog({
       query,
@@ -387,8 +488,33 @@ export async function searchCatalogOriginUnion({
     return normalizeSearchResponse(raw, undefined, expectedCurrency);
   }
 
-  const phrases = originPhrases.length ? originPhrases : getOriginSearchPhrases();
-  const [primary, ...rest] = phrases;
+  if (originPass === 'fr') {
+    const products = [];
+    const seen = new Set();
+    const maxTotalCount = await mergeSecondaryOriginPhrases({
+      phrases: rest,
+      userQuery,
+      destination,
+      categorySlug,
+      parsedLimit,
+      priceFilter,
+      expectedCurrency,
+      products,
+      seen,
+      maxTotalCount: null,
+    });
+    return originUnionPayload(
+      products,
+      {
+        cursor: null,
+        hasNextPage: false,
+        totalCount: maxTotalCount ?? null,
+      },
+      expectedCurrency,
+      parsedLimit,
+    );
+  }
+
   const firstRaw = await searchCatalog({
     query: combineQueryWithOrigin(userQuery, primary),
     destination,
@@ -409,50 +535,31 @@ export async function searchCatalogOriginUnion({
   const products = [...first.products];
   let maxTotalCount = first.pagination.totalCount;
 
-  if (products.length < parsedLimit) {
-    for (const phrase of rest) {
-      const raw = await searchCatalog({
-        query: combineQueryWithOrigin(userQuery, phrase),
-        destination,
-        categorySlug,
-        limit: parsedLimit,
-        ...priceFilter,
-      });
-      if (raw.destinationBlocked) {
-        return {
-          products: [],
-          pagination: { cursor: null, hasNextPage: false, totalCount: 0 },
-          destinationBlocked: true,
-        };
-      }
-      const extra = normalizeSearchResponse(raw, undefined, expectedCurrency);
-      if (typeof extra.pagination.totalCount === 'number') {
-        maxTotalCount =
-          typeof maxTotalCount === 'number'
-            ? Math.max(maxTotalCount, extra.pagination.totalCount)
-            : extra.pagination.totalCount;
-      }
-      for (const product of extra.products) {
-        if (seen.has(product.id)) continue;
-        seen.add(product.id);
-        products.push(product);
-        if (products.length >= parsedLimit) break;
-      }
-      if (products.length >= parsedLimit) break;
-    }
+  if (originPass !== 'en' && products.length < parsedLimit) {
+    maxTotalCount = await mergeSecondaryOriginPhrases({
+      phrases: rest,
+      userQuery,
+      destination,
+      categorySlug,
+      parsedLimit,
+      priceFilter,
+      expectedCurrency,
+      products,
+      seen,
+      maxTotalCount,
+    });
   }
 
-  return {
-    destinationBlocked: false,
-    products: products
-      .filter((p) => matchesExpectedCurrency(p.currency, expectedCurrency))
-      .slice(0, parsedLimit),
-    pagination: {
+  return originUnionPayload(
+    products,
+    {
       cursor: first.pagination.cursor,
       hasNextPage: Boolean(first.pagination.hasNextPage),
       totalCount: maxTotalCount ?? null,
     },
-  };
+    expectedCurrency,
+    parsedLimit,
+  );
 }
 
 /**

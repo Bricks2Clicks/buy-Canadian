@@ -6,6 +6,7 @@ import {
   encodeFillState,
   isRateLimited,
   MAX_CHUNKS_PER_REQUEST,
+  parseOriginPass,
 } from '../src/catalog-client.js';
 import { matchesExpectedCurrency, normalizeProductCard } from '../src/normalize-product.js';
 import { singleFlight } from '../src/inflight.js';
@@ -32,7 +33,20 @@ assert.equal(isRateLimited(429, {}), true);
 assert.equal(isRateLimited(200, { error: { message: 'Rate limit exceeded' } }), true);
 assert.equal(isRateLimited(200, { error: { message: 'catalog limit' } }), true);
 assert.equal(isRateLimited(200, { ok: true }), false);
+assert.equal(
+  isRateLimited(200, {
+    result: {
+      structuredContent: {
+        products: [{ description: 'lower exhaust gas temperatures improve throttle response' }],
+      },
+    },
+  }),
+  false,
+);
 assert.equal(new CatalogRateLimitError().status, 429);
+assert.equal(parseOriginPass(), 'all');
+assert.equal(parseOriginPass('en'), 'en');
+assert.equal(parseOriginPass('french'), 'fr');
 
 assert.equal(matchesExpectedCurrency('USD', 'CAD'), false);
 assert.equal(matchesExpectedCurrency('CAD', 'CAD'), true);

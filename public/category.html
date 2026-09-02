@@ -67,7 +67,8 @@
         </div>
         <p class="category-toolbar-note">
           Prices in CAD. Price filter and sort apply to loaded results for this
-          category and do not query the catalog again.
+          category and do not query the catalog again. Use the "Load more"
+          button at the bottom to see more.
         </p>
       </div>
       <div id="status"></div>
@@ -120,6 +121,8 @@
         breadcrumbHtml,
         MAX_PRODUCTS,
         getShipsTo,
+        withOriginPass,
+        needsFrenchOriginPass,
       } from "/js/app.js";
       import {
         categoryListingKey,
@@ -180,9 +183,9 @@
       const validPriceIds = new Set(PRICE_RANGE_OPTIONS.map((r) => r.id));
 
       function getSelectedPriceRanges() {
-        return [...priceFiltersEl.querySelectorAll('input[name="price"]:checked')].map(
-          (el) => el.value,
-        );
+        return [
+          ...priceFiltersEl.querySelectorAll('input[name="price"]:checked'),
+        ].map((el) => el.value);
       }
 
       function readToolbarFromUrl() {
@@ -191,7 +194,9 @@
           .split(",")
           .map((s) => s.trim())
           .filter((id) => validPriceIds.has(id));
-        for (const input of priceFiltersEl.querySelectorAll('input[name="price"]')) {
+        for (const input of priceFiltersEl.querySelectorAll(
+          'input[name="price"]',
+        )) {
           input.checked = selected.includes(input.value);
         }
         const sort = params.get("sort") || "";
@@ -293,6 +298,23 @@
         return path;
       }
 
+      function ingestPage(data, { updatePagination = true } = {}) {
+        const merged = mergeListingProducts(
+          allProducts,
+          data.products,
+          nextServerOrder,
+        );
+        allProducts = merged.products;
+        nextServerOrder = merged.nextServerOrder;
+
+        if (updatePagination) {
+          cursor = data.pagination.cursor;
+          hasNextPage = Boolean(data.pagination.hasNextPage);
+        }
+        persistListing();
+        applyListingState();
+      }
+
       async function loadPage() {
         if (loading) return;
         loading = true;
@@ -300,26 +322,31 @@
         statusEl.innerHTML =
           totalLoaded === 0 ? '<div class="spinner"></div>' : "";
 
+        const requestHadCursor = Boolean(cursor);
+        const path = buildSearchPath();
+
         try {
-          const data = await fetchJson(buildSearchPath());
+          const data = await fetchJson(withOriginPass(path, "en"));
           if (data.destinationBlocked) {
             showError(statusEl, data.message);
             loadMoreWrap.hidden = true;
             return;
           }
 
-          const merged = mergeListingProducts(
-            allProducts,
-            data.products,
-            nextServerOrder,
-          );
-          allProducts = merged.products;
-          nextServerOrder = merged.nextServerOrder;
+          ingestPage(data);
 
-          cursor = data.pagination.cursor;
-          hasNextPage = Boolean(data.pagination.hasNextPage);
-          persistListing();
-          applyListingState();
+          if (needsFrenchOriginPass(data, requestHadCursor)) {
+            try {
+              const extra = await fetchJson(withOriginPass(path, "fr"));
+              if (!extra.destinationBlocked && extra.products?.length) {
+                ingestPage(extra, { updatePagination: false });
+              }
+            } catch (err) {
+              if (allProducts.length === 0) {
+                throw err;
+              }
+            }
+          }
         } catch (err) {
           showError(statusEl, err.message);
         } finally {
@@ -349,8 +376,7 @@
         }));
         cursor = cached.cursor ?? null;
         hasNextPage = Boolean(cached.hasNextPage);
-        nextServerOrder =
-          cached.nextServerOrder ?? allProducts.length;
+        nextServerOrder = cached.nextServerOrder ?? allProducts.length;
         applyListingState();
       } else {
         loadPage();

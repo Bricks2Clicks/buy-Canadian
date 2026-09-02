@@ -68,6 +68,8 @@
         showError,
         MAX_PRODUCTS,
         getShipsTo,
+        withOriginPass,
+        needsFrenchOriginPass,
       } from '/js/app.js';
       import {
         applyPageSeo,
@@ -152,34 +154,54 @@
         loadMoreWrap.hidden = !(hasNextPage && totalLoaded < MAX_PRODUCTS);
       }
 
+      function ingestPage(data, { updatePagination = true } = {}) {
+        const merged = mergeListingProducts(
+          allProducts,
+          data.products,
+          nextServerOrder,
+        );
+        allProducts = merged.products;
+        nextServerOrder = merged.nextServerOrder;
+        if (updatePagination) {
+          cursor = data.pagination.cursor;
+          hasNextPage = Boolean(data.pagination.hasNextPage);
+        }
+        persistListing();
+        applyListingState();
+      }
+
       async function loadPage() {
         if (loading) return;
         loading = true;
         loadMoreBtn.disabled = true;
         statusEl.innerHTML = totalLoaded === 0 ? '<div class="spinner"></div>' : '';
 
-        try {
-          let path = `/api/catalog/search?q=${encodeURIComponent(q)}&limit=50`;
-          if (cursor) path += `&cursor=${encodeURIComponent(cursor)}`;
+        const requestHadCursor = Boolean(cursor);
+        let path = `/api/catalog/search?q=${encodeURIComponent(q)}&limit=50`;
+        if (cursor) path += `&cursor=${encodeURIComponent(cursor)}`;
 
-          const data = await fetchJson(path);
+        try {
+          const data = await fetchJson(withOriginPass(path, 'en'));
           if (data.destinationBlocked) {
             showError(statusEl, data.message);
             loadMoreWrap.hidden = true;
             return;
           }
 
-          const merged = mergeListingProducts(
-            allProducts,
-            data.products,
-            nextServerOrder,
-          );
-          allProducts = merged.products;
-          nextServerOrder = merged.nextServerOrder;
-          cursor = data.pagination.cursor;
-          hasNextPage = Boolean(data.pagination.hasNextPage);
-          persistListing();
-          applyListingState();
+          ingestPage(data);
+
+          if (needsFrenchOriginPass(data, requestHadCursor)) {
+            try {
+              const extra = await fetchJson(withOriginPass(path, 'fr'));
+              if (!extra.destinationBlocked && extra.products?.length) {
+                ingestPage(extra, { updatePagination: false });
+              }
+            } catch (err) {
+              if (allProducts.length === 0) {
+                throw err;
+              }
+            }
+          }
         } catch (err) {
           showError(statusEl, err.message);
         } finally {

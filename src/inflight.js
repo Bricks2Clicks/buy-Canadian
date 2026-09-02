@@ -23,6 +23,7 @@ export function searchInflightKey({
   limit = 50,
   priceMin = '',
   priceMax = '',
+  originPass = 'all',
 }) {
   return [
     'search',
@@ -33,6 +34,7 @@ export function searchInflightKey({
     limit,
     priceMin,
     priceMax,
+    originPass,
   ].join('\0');
 }
 
