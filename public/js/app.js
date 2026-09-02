@@ -124,9 +124,7 @@ export function initSearchForm() {
   });
 }
 
-import { heroSvg, logoMarkSvg } from './icons.js';
-
-export { heroSvg };
+import { logoMarkSvg } from './icons.js';
 
 export function mountLogoMark() {
   const slot = document.querySelector('[data-logo-mark]');

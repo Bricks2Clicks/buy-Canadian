@@ -32,7 +32,15 @@
     <main>
       <section class="hero">
         <div class="container">
-          <div class="hero-flag" id="hero-flag"></div>
+          <div class="hero-banner">
+            <img
+              src="/buyCanadian.png"
+              alt="Buy Canadian"
+              width="2172"
+              height="724"
+              decoding="async"
+              fetchpriority="high" />
+          </div>
           <h1>Buy Canadian</h1>
           <p class="tagline">By Canadians, For Canadians.</p>
           <p class="intro">
@@ -98,7 +106,6 @@
     <script type="module">
       import {
         fetchJson,
-        heroSvg,
         initFooter,
         initSearchForm,
         mountLogoMark,
@@ -127,7 +134,6 @@
       mountLogoMark();
 
       document.getElementById("year").textContent = new Date().getFullYear();
-      document.getElementById("hero-flag").innerHTML = heroSvg();
       initSearchForm();
       initFooter();
 

@@ -159,48 +159,24 @@ p {
 
 /* Hero */
 .hero {
-  background: linear-gradient(180deg, var(--red-light) 0%, var(--white) 100%);
-  padding: 2.5rem 0 2rem;
+  background: var(--white);
+  padding: 1.25rem 0 2rem;
   text-align: center;
 }
 
-.hero-flag {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 1rem;
+.hero-banner {
+  margin: 0 auto 1.25rem;
+  max-width: var(--max-width);
 }
 
-.ca-flag {
-  width: min(280px, 80vw);
-  aspect-ratio: 2 / 1;
-  background: linear-gradient(
-    to right,
-    var(--red) 0 25%,
-    var(--white) 25% 75%,
-    var(--red) 75% 100%
-  );
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  filter: drop-shadow(0 4px 12px rgba(216, 6, 33, 0.15));
-}
-
-.ca-flag-leaf {
-  width: 26%;
+.hero-banner img {
+  display: block;
+  width: 100%;
   height: auto;
-  object-fit: contain;
-  filter: brightness(0) saturate(100%) invert(15%) sepia(95%) saturate(6500%)
-    hue-rotate(346deg) brightness(92%) contrast(105%);
 }
 
 .logo-mark .logo-maple {
   filter: brightness(0) invert(1);
-}
-
-.hero-flag svg {
-  width: min(280px, 80vw);
-  height: auto;
-  filter: drop-shadow(0 4px 12px rgba(216, 6, 33, 0.15));
 }
 
 .hero h1 {

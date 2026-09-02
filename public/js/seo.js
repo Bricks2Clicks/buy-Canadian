@@ -60,7 +60,7 @@ export function applyPageSeo({
   image,
 }) {
   const url = absoluteUrl(path);
-  const ogImage = image ? absoluteUrl(image) : absoluteUrl('/icons/maple-leaf.png');
+  const ogImage = image ? absoluteUrl(image) : absoluteUrl('/buyCanadian.png');
 
   document.title = title;
 
@@ -82,7 +82,7 @@ export function applyPageSeo({
   upsertMeta('property', 'og:locale', 'en_CA');
   upsertMeta('property', 'og:image', ogImage);
 
-  upsertMeta('name', 'twitter:card', 'summary');
+  upsertMeta('name', 'twitter:card', image ? 'summary' : 'summary_large_image');
   upsertMeta('name', 'twitter:title', title);
   upsertMeta('name', 'twitter:description', description);
   upsertMeta('name', 'twitter:image', ogImage);
