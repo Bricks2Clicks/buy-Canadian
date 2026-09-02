@@ -97,6 +97,25 @@ p {
   width: 32px;
   height: 32px;
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--red);
+  border-radius: 6px;
+}
+
+.logo-maple {
+  width: 20px;
+  height: 22px;
+  background-color: var(--white);
+  -webkit-mask-image: url('/icons/maple-leaf.png');
+  mask-image: url('/icons/maple-leaf.png');
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
 }
 
 .search-form {
@@ -173,10 +192,6 @@ p {
   display: block;
   width: 100%;
   height: auto;
-}
-
-.logo-mark .logo-maple {
-  filter: brightness(0) invert(1);
 }
 
 .hero h1 {
