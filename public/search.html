@@ -61,9 +61,9 @@
         initSearchForm,
         mountLogoMark,
         renderProductGrid,
-        appendProductGrid,
         showError,
         MAX_PRODUCTS,
+        getShipsTo,
       } from '/js/app.js';
       import {
         applyPageSeo,
@@ -71,6 +71,12 @@
         breadcrumbSchema,
         itemListSchema,
       } from '/js/seo.js';
+      import {
+        mergeListingProducts,
+        readListing,
+        searchListingKey,
+        writeListing,
+      } from '/js/listing-store.js';
 
       mountLogoMark();
 
@@ -110,6 +116,37 @@
       let cursor = null;
       let totalLoaded = 0;
       let loading = false;
+      let allProducts = [];
+      let nextServerOrder = 0;
+      let hasNextPage = false;
+      const storeKey = searchListingKey(q, getShipsTo());
+
+      function persistListing() {
+        writeListing(storeKey, {
+          products: allProducts,
+          cursor,
+          hasNextPage,
+          nextServerOrder,
+        });
+      }
+
+      function applyListingState() {
+        totalLoaded = allProducts.length;
+        renderProductGrid(grid, allProducts);
+        if (allProducts.length && !schemaInjected) {
+          injectJsonLd(
+            itemListSchema(allProducts, `Search: ${q}`, pagePath),
+          );
+          schemaInjected = true;
+        }
+        if (totalLoaded === 0) {
+          statusEl.innerHTML =
+            '<p class="status-message">No in-stock products matched your search.</p>';
+        } else {
+          statusEl.innerHTML = '';
+        }
+        loadMoreWrap.hidden = !(hasNextPage && totalLoaded < MAX_PRODUCTS);
+      }
 
       async function loadPage() {
         if (loading) return;
@@ -128,31 +165,17 @@
             return;
           }
 
-          if (totalLoaded === 0) {
-            renderProductGrid(grid, data.products);
-            if (data.products.length && !schemaInjected) {
-              injectJsonLd(
-                itemListSchema(data.products, `Search: ${q}`, pagePath),
-              );
-              schemaInjected = true;
-            }
-          } else {
-            appendProductGrid(grid, data.products);
-          }
-
-          totalLoaded += data.products.length;
+          const merged = mergeListingProducts(
+            allProducts,
+            data.products,
+            nextServerOrder,
+          );
+          allProducts = merged.products;
+          nextServerOrder = merged.nextServerOrder;
           cursor = data.pagination.cursor;
-          const hasNext =
-            data.pagination.hasNextPage && totalLoaded < MAX_PRODUCTS;
-
-          if (totalLoaded === 0) {
-            statusEl.innerHTML =
-              '<p class="status-message">No in-stock products matched your search.</p>';
-          } else {
-            statusEl.innerHTML = '';
-          }
-
-          loadMoreWrap.hidden = !hasNext;
+          hasNextPage = Boolean(data.pagination.hasNextPage);
+          persistListing();
+          applyListingState();
         } catch (err) {
           showError(statusEl, err.message);
         } finally {
@@ -162,7 +185,20 @@
       }
 
       loadMoreBtn.addEventListener('click', loadPage);
-      loadPage();
+
+      const cached = readListing(storeKey);
+      if (cached) {
+        allProducts = cached.products.map((p, i) => ({
+          ...p,
+          _order: p._order ?? i,
+        }));
+        cursor = cached.cursor ?? null;
+        hasNextPage = Boolean(cached.hasNextPage);
+        nextServerOrder = cached.nextServerOrder ?? allProducts.length;
+        applyListingState();
+      } else {
+        loadPage();
+      }
     </script>
   </body>
 </html>

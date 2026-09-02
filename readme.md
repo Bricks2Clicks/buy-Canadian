@@ -2,7 +2,7 @@
 
 **By Canadians, For Canadians.**
 
-Live product discovery from Canadian Shopify merchants via the [Shopify Global Catalog](https://shopify.dev/docs/agents/catalog). This site does not store catalog results or images — every page load runs fresh `search_catalog` / `get_product` calls through a small Node proxy.
+Live product discovery from Canadian Shopify merchants via the [Shopify Global Catalog](https://shopify.dev/docs/agents/catalog). This site does not store a product database on our servers. The first visit to a category or search queries Catalog live; your browser may keep that listing in `localStorage` for a short time so sort, price filter, and roaming back do not repeat the query. Images stay on Shopify’s CDN.
 
 ## Requirements
 
@@ -62,7 +62,7 @@ Quick summary: push to GitHub → import in [Vercel](https://vercel.com) → add
 
 ## Architecture
 
-- **Express proxy** — JWT auth, concurrency cap (3), 429 backoff, `Cache-Control: no-store`
+- **Express proxy** — JWT auth, concurrency cap (3), 429 backoff, in-flight coalescing of identical Catalog requests, `Cache-Control: no-store` on API JSON
 - **Catalog MCP** — `search_catalog` and `get_product` with `filters.available: true`
 - **Taxonomy** — Static Shopify Standard Product Taxonomy root categories (public data)
 - **Category ranking** — Homepage category order from [`data/category-stats.json`](data/category-stats.json), refreshed by admin (not on each page load)
@@ -70,7 +70,9 @@ Quick summary: push to GitHub → import in [Vercel](https://vercel.com) → add
 
 ## Category ranking (admin)
 
-Homepage categories are ordered **most eligible listings → least**, using a static snapshot in `data/category-stats.json`. The same refresh stores a **sample preview image** per category so the homepage does not call Catalog for every tile on each visit. Listing/search pages still query Catalog live.
+Homepage categories are ordered **most eligible listings → least**, using a static snapshot in `data/category-stats.json`. The same refresh stores a **sample preview image** per category so the homepage does not call Catalog for every tile on each visit. Category and search pages query Catalog live on first visit; the browser keeps that listing per category (and per search) for about 45 minutes so roaming back, sort, and price filter do not repeat the Catalog call.
+
+Refresh quarterly or after major catalog changes:
 
 Refresh quarterly or after major catalog changes:
 
@@ -84,7 +86,7 @@ Category browse uses **root + all descendant** Shopify taxonomy IDs (see `data/t
 npm run build-taxonomy-index
 ```
 
-Origin matching runs **separate Catalog searches** per phrase (`made in Canada`, `fabriqué au Canada`, `fabrique au Canada`) and merges results on listing pages. Category stats use the **max** count across phrases during refresh.
+Origin matching runs a **primary English** Catalog search (`made in Canada`), then a **French** search (`fabriqué au Canada`) only if the first page is still short. Results are merged on listing pages. Category stats use the **max** count across phrases during refresh. Large taxonomy trees are searched in chunks until a page of products is filled (not every descendant GID batch at once).
 
 ## API (homepage tiles)
 

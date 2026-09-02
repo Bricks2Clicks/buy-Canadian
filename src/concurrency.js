@@ -1,3 +1,5 @@
+import { config } from './config.js';
+
 export class Semaphore {
   constructor(max) {
     this.max = max;
@@ -30,4 +32,4 @@ export class Semaphore {
   }
 }
 
-export const catalogSemaphore = new Semaphore(3);
+export const catalogSemaphore = new Semaphore(config.maxConcurrency || 3);

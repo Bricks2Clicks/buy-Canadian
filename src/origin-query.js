@@ -1,9 +1,10 @@
-/** English and French product-copy phrases — each is searched separately, then merged. */
-export const ORIGIN_SEARCH_PHRASES = [
-  'made in Canada',
-  'fabriqué au Canada',
-  'fabrique au Canada',
-];
+/**
+ * English and French product-copy phrases — each is searched separately, then merged.
+ * Unaccented "fabrique au Canada" is omitted: Catalog free-text already matches the
+ * accented form for typical unaccented listings. Wildcards are not documented for
+ * Catalog MCP and are not used.
+ */
+export const ORIGIN_SEARCH_PHRASES = ['made in Canada', 'fabriqué au Canada'];
 
 const ORIGIN_IN_USER_QUERY = [
   /made in canada/i,
@@ -11,7 +12,7 @@ const ORIGIN_IN_USER_QUERY = [
   /fabrique au canada/i,
 ];
 
-/** Primary phrase used for cursor pagination (load-more). */
+/** Primary phrase used for cursor pagination (load-more) and first-page search. */
 export const PRIMARY_ORIGIN_PHRASE = ORIGIN_SEARCH_PHRASES[0];
 
 export function getOriginSearchPhrases() {

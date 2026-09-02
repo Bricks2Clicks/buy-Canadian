@@ -59,10 +59,12 @@
           <a href="https://shopify.dev/docs/agents/catalog" rel="noopener"
             >Shopify Global Catalog</a
           >
-          live on every visit, so what you see here are fresh results every time
-          you load the site (no stale, copied catalog here!), which shows you
-          products from Canadian sellers with a best-effort English and French
-          origin search filter (“made in Canada” / “fabriqué au Canada”).
+          live on the first visit to a category or search, so what you see here
+          are fresh Catalog results (no product database on our servers), with a
+          best-effort English and French origin search filter (“made in Canada”
+          / “fabriqué au Canada”). Your browser may keep a short-lived copy of a
+          category you already opened so you can roam without repeating that
+          query.
         </p>
         <p>
           The quality of the results depends on the quality of individual
@@ -76,12 +78,14 @@
       <div class="faq-item">
         <h2>How it works</h2>
         <p>
-          Buy Canadian is a pass-through discovery site. We do not store any
-          product listings, prices, or images. Each page load runs live
-          <code>search_catalog</code> and <code>get_product</code> calls through
-          a small server proxy with Canadian shipping filters. When you find
-          something you like, you complete purchase on the merchant's own
-          Shopify store.
+          Buy Canadian is a pass-through discovery site. We do not store a
+          product database, prices, or images on our servers. The first load of
+          a category or search runs live
+          <code>search_catalog</code> and product pages run
+          <code>get_product</code> through a small server proxy with Canadian
+          shipping filters. Sort and price filter use the results already in
+          your browser. When you find something you like, you complete purchase
+          on the merchant's own Shopify store.
         </p>
       </div>
 

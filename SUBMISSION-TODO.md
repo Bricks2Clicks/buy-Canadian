@@ -40,7 +40,7 @@ Track remaining tasks for the [WebMCP Challenge](https://webmcp.devpost.com/) an
 - [ ] View page source — JSON-LD present on home, FAQ, about, product
 - [ ] Agent can call `list_categories` → `search_products` → `get_product_details`
 - [ ] `open_product_page` navigates the tab to a product
-- [ ] **Remove local/Vercel `CATALOG_QUERY`** if set to English-only — default is bilingual OR query
+- [ ] **Remove local/Vercel `CATALOG_QUERY`** if set to English-only — default is English then French if the first page is short
 - [ ] **Re-run** `npm run refresh-category-stats` and commit updated `data/category-stats.json`
 
 ---

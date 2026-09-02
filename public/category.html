@@ -62,7 +62,8 @@
           </select>
         </div>
         <p class="category-toolbar-note">
-          Prices in CAD. Price filter and sort apply to loaded results.
+          Prices in CAD. Price filter and sort apply to loaded results for this
+          category and do not query the catalog again.
         </p>
       </div>
       <div id="status"></div>
@@ -114,7 +115,14 @@
         PRICE_RANGE_OPTIONS,
         breadcrumbHtml,
         MAX_PRODUCTS,
+        getShipsTo,
       } from "/js/app.js";
+      import {
+        categoryListingKey,
+        mergeListingProducts,
+        readListing,
+        writeListing,
+      } from "/js/listing-store.js";
       import {
         applyPageSeo,
         injectJsonLd,
@@ -207,6 +215,42 @@
       let loading = false;
       let allProducts = [];
       let nextServerOrder = 0;
+      let hasNextPage = false;
+      const storeKey = categoryListingKey(slug, getShipsTo());
+
+      function persistListing() {
+        writeListing(storeKey, {
+          products: allProducts,
+          cursor,
+          hasNextPage,
+          nextServerOrder,
+        });
+      }
+
+      function applyListingState() {
+        totalLoaded = allProducts.length;
+        renderDisplayedProducts();
+        if (allProducts.length && !schemaInjected) {
+          injectJsonLd(
+            itemListSchema(
+              allProducts,
+              `${categoryName} — Buy Canadian`,
+              pagePath,
+            ),
+          );
+          schemaInjected = true;
+        }
+        if (totalLoaded === 0) {
+          statusEl.innerHTML =
+            '<p class="status-message">No in-stock products found in this category right now.</p>';
+        } else {
+          updateEmptyFilterMessage(
+            filterProductsByPriceRanges(allProducts, getSelectedPriceRanges())
+              .length,
+          );
+        }
+        loadMoreWrap.hidden = !(hasNextPage && totalLoaded < MAX_PRODUCTS);
+      }
 
       function renderDisplayedProducts() {
         const filtered = filterProductsByPriceRanges(
@@ -260,38 +304,18 @@
             return;
           }
 
-          for (const product of data.products) {
-            allProducts.push({ ...product, _order: nextServerOrder++ });
-          }
+          const merged = mergeListingProducts(
+            allProducts,
+            data.products,
+            nextServerOrder,
+          );
+          allProducts = merged.products;
+          nextServerOrder = merged.nextServerOrder;
 
-          renderDisplayedProducts();
-
-          if (allProducts.length && !schemaInjected) {
-            injectJsonLd(
-              itemListSchema(
-                allProducts,
-                `${categoryName} — Buy Canadian`,
-                pagePath,
-              ),
-            );
-            schemaInjected = true;
-          }
-
-          totalLoaded = allProducts.length;
           cursor = data.pagination.cursor;
-          const hasNext =
-            data.pagination.hasNextPage && totalLoaded < MAX_PRODUCTS;
-
-          if (totalLoaded === 0) {
-            statusEl.innerHTML =
-              '<p class="status-message">No in-stock products found in this category right now.</p>';
-          } else {
-            updateEmptyFilterMessage(
-              filterProductsByPriceRanges(allProducts, getSelectedPriceRanges()).length,
-            );
-          }
-
-          loadMoreWrap.hidden = !hasNext;
+          hasNextPage = Boolean(data.pagination.hasNextPage);
+          persistListing();
+          applyListingState();
         } catch (err) {
           showError(statusEl, err.message);
         } finally {
@@ -312,7 +336,21 @@
       });
 
       loadMoreBtn.addEventListener("click", loadPage);
-      loadPage();
+
+      const cached = readListing(storeKey);
+      if (cached) {
+        allProducts = cached.products.map((p, i) => ({
+          ...p,
+          _order: p._order ?? i,
+        }));
+        cursor = cached.cursor ?? null;
+        hasNextPage = Boolean(cached.hasNextPage);
+        nextServerOrder =
+          cached.nextServerOrder ?? allProducts.length;
+        applyListingState();
+      } else {
+        loadPage();
+      }
     </script>
   </body>
 </html>

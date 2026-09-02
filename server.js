@@ -2,10 +2,12 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { config, SHIPPABLE_COUNTRIES } from './src/config.js';
-import { getProduct, searchCatalogOriginUnion } from './src/catalog-client.js';
+import { CatalogRateLimitError, getProduct, searchCatalogOriginUnion } from './src/catalog-client.js';
 import {
   normalizeProductDetail,
 } from './src/normalize-product.js';
+import { destinationContext } from './src/destination.js';
+import { productInflightKey, searchInflightKey, singleFlight } from './src/inflight.js';
 import {
   getCategoryBySlug,
 } from './src/taxonomy.js';
@@ -34,7 +36,15 @@ function sendJson(res, payload, status = 200) {
 
 function handleApiError(res, err) {
   console.error(err);
-  sendJson(res, { error: err.message || 'Catalog request failed' }, 502);
+  const isBusy = err instanceof CatalogRateLimitError || err.status === 429;
+  sendJson(
+    res,
+    {
+      error: err.message || 'Catalog request failed',
+      ...(isBusy ? { code: 'rate_limited' } : {}),
+    },
+    isBusy ? 429 : 502,
+  );
 }
 
 /** Parse price filter param (minor currency units). Returns undefined if omitted, null if invalid. */
@@ -95,16 +105,30 @@ app.get('/api/catalog/search', async (req, res) => {
 
     const query = q ? String(q) : '';
     const parsedLimit = Math.min(Math.max(Number(limit) || 50, 1), 50);
+    const dest = String(to || 'CA');
+    const cursorValue = cursor ? String(cursor) : '';
 
-    const normalized = await searchCatalogOriginUnion({
-      userQuery: query,
-      destination: to,
-      categorySlug: category ? category.slug : undefined,
-      cursor: cursor ? String(cursor) : undefined,
-      limit: parsedLimit,
-      priceMin,
-      priceMax,
-    });
+    const normalized = await singleFlight(
+      searchInflightKey({
+        categorySlug: category ? category.slug : '',
+        query,
+        cursor: cursorValue,
+        destination: dest,
+        limit: parsedLimit,
+        priceMin: priceMin ?? '',
+        priceMax: priceMax ?? '',
+      }),
+      () =>
+        searchCatalogOriginUnion({
+          userQuery: query,
+          destination: to,
+          categorySlug: category ? category.slug : undefined,
+          cursor: cursorValue || undefined,
+          limit: parsedLimit,
+          priceMin,
+          priceMax,
+        }),
+    );
 
     if (normalized.destinationBlocked) {
       return sendJson(res, {
@@ -177,11 +201,19 @@ app.get('/api/catalog/product', async (req, res) => {
       ? [{ id: String(id), variant_id: String(variant) }]
       : [{ id: String(id) }];
 
-    const raw = await getProduct({
-      id: String(id),
-      destination: to,
-      selected,
-    });
+    const raw = await singleFlight(
+      productInflightKey({
+        id: String(id),
+        destination: String(to || 'CA'),
+        variant: variant ? String(variant) : '',
+      }),
+      () =>
+        getProduct({
+          id: String(id),
+          destination: to,
+          selected,
+        }),
+    );
 
     if (raw.destinationBlocked) {
       return sendJson(res, {
@@ -192,7 +224,8 @@ app.get('/api/catalog/product', async (req, res) => {
       });
     }
 
-    const detail = normalizeProductDetail(raw.product);
+    const dest = destinationContext(to);
+    const detail = normalizeProductDetail(raw.product, dest.currency);
     if (!detail) {
       return sendJson(res, { error: 'Product unavailable or out of stock' }, 404);
     }

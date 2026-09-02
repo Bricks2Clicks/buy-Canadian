@@ -3,19 +3,37 @@ import { config, getAgentProfileUrl } from './config.js';
 import { catalogSemaphore } from './concurrency.js';
 import { destinationContext } from './destination.js';
 import { combineQueryWithOrigin, getOriginSearchPhrases, PRIMARY_ORIGIN_PHRASE } from './origin-query.js';
-import { normalizeSearchResponse } from './normalize-product.js';
+import { matchesExpectedCurrency, normalizeProductCard, normalizeSearchResponse } from './normalize-product.js';
 import { getCategoryFilterGidChunks, getCategoryFilterGids } from './taxonomy-index.js';
 
 let rpcId = 0;
+
+/** Cap taxonomy-chunk MCP calls per search so large roots cannot fire dozens of tools. */
+export const MAX_CHUNKS_PER_REQUEST = 6;
+
+export class CatalogRateLimitError extends Error {
+  constructor(message = 'The catalog is busy. Please try again in a moment.') {
+    super(message);
+    this.name = 'CatalogRateLimitError';
+    this.status = 429;
+    this.code = 'rate_limited';
+  }
+}
 
 function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms));
 }
 
-function isRateLimited(status, body) {
+export function isRateLimited(status, body) {
   if (status === 429) return true;
   const msg = JSON.stringify(body || '').toLowerCase();
-  return msg.includes('rate limit');
+  return (
+    msg.includes('rate limit') ||
+    msg.includes('throttl') ||
+    msg.includes('too many request') ||
+    msg.includes('catalog limit') ||
+    msg.includes('query limit')
+  );
 }
 
 async function callCatalogTool(toolName, catalogArgs) {
@@ -54,7 +72,7 @@ async function callCatalogTool(toolName, catalogArgs) {
       if (isRateLimited(res.status, data)) {
         const delay = config.retryBaseMs * 2 ** attempt + Math.random() * 200;
         await sleep(delay);
-        lastError = new Error('Catalog rate limit exceeded');
+        lastError = new CatalogRateLimitError();
         continue;
       }
 
@@ -73,19 +91,39 @@ async function callCatalogTool(toolName, catalogArgs) {
   });
 }
 
-function decodeChunkCursor(cursor) {
-  if (!cursor) return null;
+/**
+ * v2 fill cursor: { v:2, next, resume }
+ * next = chunk index to continue; resume = Catalog cursor for that chunk (or null to start it).
+ * v1 { v:1, c:[] } and bare strings are accepted for in-flight clients.
+ */
+export function decodeFillState(cursor, chunkCount) {
+  if (!cursor) return { next: 0, resume: undefined };
   try {
     const parsed = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8'));
-    if (parsed?.v === 1 && Array.isArray(parsed.c)) return parsed.c;
+    if (parsed?.v === 2 && Number.isInteger(parsed.next)) {
+      return {
+        next: Math.max(0, parsed.next),
+        resume: parsed.resume || undefined,
+      };
+    }
+    if (parsed?.v === 1 && Array.isArray(parsed.c)) {
+      const idx = parsed.c.findIndex((c) => c);
+      if (idx === -1) return { next: chunkCount, resume: undefined };
+      return { next: idx, resume: parsed.c[idx] };
+    }
   } catch {
     /* legacy single-chunk cursor */
   }
-  return [cursor];
+  return { next: 0, resume: cursor };
 }
 
-function encodeChunkCursor(cursors) {
-  return Buffer.from(JSON.stringify({ v: 1, c: cursors })).toString('base64url');
+export function encodeFillState(next, resume, chunkCount) {
+  const hasMoreChunks = next < chunkCount;
+  const hasResume = Boolean(resume);
+  if (!hasMoreChunks && !hasResume) return null;
+  return Buffer.from(
+    JSON.stringify({ v: 2, next, resume: resume || null }),
+  ).toString('base64url');
 }
 
 function buildSearchCatalogArgs({
@@ -135,54 +173,75 @@ function buildSearchCatalogArgs({
   return args;
 }
 
+function extractChunkContent(raw) {
+  return raw?.structuredContent ?? raw ?? {};
+}
+
+/**
+ * Walk taxonomy GID chunks until `limit` unique destination-currency products
+ * are filled, instead of querying every chunk in parallel.
+ */
 async function searchCatalogChunked(options) {
   const chunks = getCategoryFilterGidChunks(options.categorySlug);
-  const chunkCursors = decodeChunkCursor(options.cursor);
+  const dest = destinationContext(options.destination);
   const limit = Math.min(Math.max(options.limit ?? 50, 1), 50);
-  const perChunk = Math.max(1, Math.ceil(limit / chunks.length));
-
-  const rawResults = await Promise.all(
-    chunks.map((gids, i) =>
-      callCatalogTool(
-        'search_catalog',
-        buildSearchCatalogArgs({
-          ...options,
-          categorySlug: undefined,
-          categoryGids: gids,
-          cursor: chunkCursors?.[i] ?? undefined,
-          limit: Math.min(perChunk, 50),
-        }),
-      ),
-    ),
-  );
+  const state = decodeFillState(options.cursor, chunks.length);
 
   const seen = new Set();
   const products = [];
-  const nextCursors = [];
-  let hasNextPage = false;
   let maxTotalCount = 0;
+  let chunkIndex = state.next;
+  let resume = state.resume;
+  let chunksThisRequest = 0;
 
-  for (let i = 0; i < rawResults.length; i++) {
-    const content = rawResults[i]?.structuredContent ?? rawResults[i] ?? {};
+  while (products.length < limit && chunkIndex < chunks.length) {
+    if (chunksThisRequest >= MAX_CHUNKS_PER_REQUEST) break;
+
+    const remaining = limit - products.length;
+    const raw = await callCatalogTool(
+      'search_catalog',
+      buildSearchCatalogArgs({
+        ...options,
+        categorySlug: undefined,
+        categoryGids: chunks[chunkIndex],
+        cursor: resume,
+        limit: Math.min(Math.max(remaining, 1), 50),
+      }),
+    );
+    chunksThisRequest += 1;
+
+    const content = extractChunkContent(raw);
     const pagination = content.pagination ?? {};
-    nextCursors[i] = pagination.has_next_page ? pagination.cursor ?? null : null;
-    if (pagination.has_next_page) hasNextPage = true;
     if (typeof pagination.total_count === 'number') {
       maxTotalCount = Math.max(maxTotalCount, pagination.total_count);
     }
+
     for (const product of content.products ?? []) {
       if (seen.has(product.id)) continue;
+      if (!normalizeProductCard(product, undefined, dest.currency)) continue;
       seen.add(product.id);
       products.push(product);
+      if (products.length >= limit) break;
     }
+
+    if (pagination.has_next_page && pagination.cursor) {
+      resume = pagination.cursor;
+      if (products.length >= limit) break;
+      continue;
+    }
+
+    resume = undefined;
+    chunkIndex += 1;
   }
+
+  const nextCursor = encodeFillState(chunkIndex, resume, chunks.length);
 
   return {
     structuredContent: {
-      products: products.slice(0, limit),
+      products,
       pagination: {
-        cursor: hasNextPage ? encodeChunkCursor(nextCursors) : null,
-        has_next_page: hasNextPage,
+        cursor: nextCursor,
+        has_next_page: Boolean(nextCursor),
         total_count: maxTotalCount || null,
       },
     },
@@ -251,10 +310,10 @@ function extractPagination(raw) {
 }
 
 /**
- * Merge parallel catalog searches (dedupe by product id).
+ * Merge catalog searches (dedupe by product id).
  * total_count uses the max estimate across phrases (union is >= max; Catalog OR is unreliable).
  */
-export function mergeSearchResults(rawResults, limit) {
+export function mergeSearchResults(rawResults, limit, expectedCurrency) {
   const seen = new Set();
   const products = [];
   let maxTotalCount = 0;
@@ -267,7 +326,7 @@ export function mergeSearchResults(rawResults, limit) {
       return { destinationBlocked: true };
     }
 
-    const normalized = normalizeSearchResponse(raw);
+    const normalized = normalizeSearchResponse(raw, undefined, expectedCurrency);
     const total = normalized.pagination.totalCount;
     if (typeof total === 'number') {
       maxTotalCount = Math.max(maxTotalCount, total);
@@ -294,7 +353,7 @@ export function mergeSearchResults(rawResults, limit) {
 }
 
 /**
- * Search with each origin phrase separately, then merge (true EN ∪ FR coverage).
+ * Search English first; add French only if the page is still short of `limit`.
  * Paginated requests (cursor set) use the primary English phrase only.
  */
 export async function searchCatalogOriginUnion({
@@ -309,6 +368,8 @@ export async function searchCatalogOriginUnion({
 }) {
   const parsedLimit = Math.min(Math.max(limit, 1), 50);
   const priceFilter = { priceMin, priceMax };
+  const dest = destinationContext(destination);
+  const expectedCurrency = dest.currency;
 
   if (cursor) {
     const query = combineQueryWithOrigin(userQuery, PRIMARY_ORIGIN_PHRASE);
@@ -323,25 +384,19 @@ export async function searchCatalogOriginUnion({
     if (raw.destinationBlocked) {
       return { destinationBlocked: true };
     }
-    return normalizeSearchResponse(raw);
+    return normalizeSearchResponse(raw, undefined, expectedCurrency);
   }
 
   const phrases = originPhrases.length ? originPhrases : getOriginSearchPhrases();
-  const rawResults = await Promise.all(
-    phrases.map((phrase) => {
-      const query = combineQueryWithOrigin(userQuery, phrase);
-      return searchCatalog({
-        query,
-        destination,
-        categorySlug,
-        limit: parsedLimit,
-        ...priceFilter,
-      });
-    }),
-  );
-
-  const merged = mergeSearchResults(rawResults, parsedLimit);
-  if (merged.destinationBlocked) {
+  const [primary, ...rest] = phrases;
+  const firstRaw = await searchCatalog({
+    query: combineQueryWithOrigin(userQuery, primary),
+    destination,
+    categorySlug,
+    limit: parsedLimit,
+    ...priceFilter,
+  });
+  if (firstRaw.destinationBlocked) {
     return {
       products: [],
       pagination: { cursor: null, hasNextPage: false, totalCount: 0 },
@@ -349,7 +404,55 @@ export async function searchCatalogOriginUnion({
     };
   }
 
-  return merged;
+  const first = normalizeSearchResponse(firstRaw, undefined, expectedCurrency);
+  const seen = new Set(first.products.map((p) => p.id));
+  const products = [...first.products];
+  let maxTotalCount = first.pagination.totalCount;
+
+  if (products.length < parsedLimit) {
+    for (const phrase of rest) {
+      const raw = await searchCatalog({
+        query: combineQueryWithOrigin(userQuery, phrase),
+        destination,
+        categorySlug,
+        limit: parsedLimit,
+        ...priceFilter,
+      });
+      if (raw.destinationBlocked) {
+        return {
+          products: [],
+          pagination: { cursor: null, hasNextPage: false, totalCount: 0 },
+          destinationBlocked: true,
+        };
+      }
+      const extra = normalizeSearchResponse(raw, undefined, expectedCurrency);
+      if (typeof extra.pagination.totalCount === 'number') {
+        maxTotalCount =
+          typeof maxTotalCount === 'number'
+            ? Math.max(maxTotalCount, extra.pagination.totalCount)
+            : extra.pagination.totalCount;
+      }
+      for (const product of extra.products) {
+        if (seen.has(product.id)) continue;
+        seen.add(product.id);
+        products.push(product);
+        if (products.length >= parsedLimit) break;
+      }
+      if (products.length >= parsedLimit) break;
+    }
+  }
+
+  return {
+    destinationBlocked: false,
+    products: products
+      .filter((p) => matchesExpectedCurrency(p.currency, expectedCurrency))
+      .slice(0, parsedLimit),
+    pagination: {
+      cursor: first.pagination.cursor,
+      hasNextPage: Boolean(first.pagination.hasNextPage),
+      totalCount: maxTotalCount ?? null,
+    },
+  };
 }
 
 /**

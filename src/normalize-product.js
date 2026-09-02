@@ -36,16 +36,27 @@ function variantBuyUrl(variant) {
   return variant.url || variant.checkout_url || null;
 }
 
-export function normalizeProductCard(product, preferredVariantId) {
+/** Drop offers priced in a different currency than the buyer destination (e.g. USD on CA). */
+export function matchesExpectedCurrency(actual, expected) {
+  if (!expected) return true;
+  if (!actual) return true;
+  return String(actual).toUpperCase() === String(expected).toUpperCase();
+}
+
+export function normalizeProductCard(product, preferredVariantId, expectedCurrency = 'CAD') {
   if (!productHasStock(product)) return null;
 
   const variant = pickInStockVariant(product, preferredVariantId);
   if (!variant) return null;
 
-  const currency =
+  const rawCurrency =
     variant.price?.currency ||
     product.price_range?.min?.currency ||
-    'CAD';
+    null;
+  if (rawCurrency && !matchesExpectedCurrency(rawCurrency, expectedCurrency)) {
+    return null;
+  }
+  const resolvedCurrency = rawCurrency || expectedCurrency;
   const priceAmount = variant.price?.amount ?? product.price_range?.min?.amount;
   const image =
     variant.media?.[0]?.url ||
@@ -58,9 +69,9 @@ export function normalizeProductCard(product, preferredVariantId) {
     title: product.title,
     image,
     imageAlt: product.media?.[0]?.alt_text || product.title,
-    price: formatPrice(priceAmount, currency),
+    price: formatPrice(priceAmount, resolvedCurrency),
     priceRaw: priceAmount,
-    currency,
+    currency: resolvedCurrency,
     variantId: variant.id,
     sellerName: seller?.name || 'Shopify store',
     sellerDomain: seller?.domain,
@@ -69,21 +80,26 @@ export function normalizeProductCard(product, preferredVariantId) {
   };
 }
 
-export function normalizeProductDetail(product) {
+export function normalizeProductDetail(product, expectedCurrency = 'CAD') {
   if (!productHasStock(product)) return null;
 
-  const inStockVariants = (product.variants || []).filter(isVariantInStock).map((v) => ({
-    id: v.id,
-    title: v.title,
-    price: formatPrice(v.price?.amount, v.price?.currency),
-    priceRaw: v.price?.amount,
-    currency: v.price?.currency,
-    buyUrl: withBuyCanadianUtm(variantBuyUrl(v)),
-    sellerName: v.seller?.name,
-    sellerDomain: v.seller?.domain,
-    options: v.options,
-    availability: v.availability,
-  }));
+  const inStockVariants = (product.variants || [])
+    .filter(isVariantInStock)
+    .filter((v) => matchesExpectedCurrency(v.price?.currency, expectedCurrency))
+    .map((v) => ({
+      id: v.id,
+      title: v.title,
+      price: formatPrice(v.price?.amount, v.price?.currency),
+      priceRaw: v.price?.amount,
+      currency: v.price?.currency,
+      buyUrl: withBuyCanadianUtm(variantBuyUrl(v)),
+      sellerName: v.seller?.name,
+      sellerDomain: v.seller?.domain,
+      options: v.options,
+      availability: v.availability,
+    }));
+
+  if (!inStockVariants.length) return null;
 
   const desc = product.description?.html ?? product.description?.plain ?? '';
   const descriptionPlain =
@@ -124,10 +140,10 @@ export function normalizeProductDetail(product) {
   };
 }
 
-export function normalizeSearchResponse(result, preferredVariantId) {
+export function normalizeSearchResponse(result, preferredVariantId, expectedCurrency = 'CAD') {
   const content = result?.structuredContent ?? result ?? {};
   const products = (content.products || [])
-    .map((p) => normalizeProductCard(p, preferredVariantId))
+    .map((p) => normalizeProductCard(p, preferredVariantId, expectedCurrency))
     .filter(Boolean);
 
   const pagination = content.pagination || {};
