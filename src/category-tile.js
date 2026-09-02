@@ -1,4 +1,5 @@
 import { searchCatalog } from './catalog-client.js';
+import { destinationContext } from './destination.js';
 import { normalizeProductCard } from './normalize-product.js';
 import { getCategoryBySlug } from './taxonomy.js';
 import { getOriginSearchPhrases } from './origin-query.js';
@@ -25,8 +26,9 @@ function extractPagination(raw) {
   return content.pagination ?? {};
 }
 
-function tileFromRawProduct(product) {
-  const card = product ? normalizeProductCard(product) : null;
+function tileFromRawProduct(product, destination) {
+  const expectedCurrency = destinationContext(destination).currency;
+  const card = product ? normalizeProductCard(product, undefined, expectedCurrency) : null;
   if (!card?.image) return null;
   return { image: card.image, imageAlt: card.imageAlt, title: card.title };
 }
@@ -72,7 +74,7 @@ export async function fetchLiveCategoryTilePreview(slug, destination) {
     }
 
     const content = raw?.structuredContent ?? raw ?? {};
-    const tile = tileFromRawProduct(content.products?.[0]);
+    const tile = tileFromRawProduct(content.products?.[0], destination);
     if (tile) {
       return {
         slug: category.slug,
@@ -116,7 +118,7 @@ export async function fetchCategoryOriginSnapshotRow(category, destination = 'CA
 
     if (!tile) {
       const content = raw?.structuredContent ?? raw ?? {};
-      tile = tileFromRawProduct(content.products?.[0]);
+      tile = tileFromRawProduct(content.products?.[0], destination);
     }
   }
 

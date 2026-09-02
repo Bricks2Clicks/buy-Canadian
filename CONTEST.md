@@ -11,7 +11,7 @@
 
 ### What we built
 
-**Buy Canadian** is a live discovery site that helps Canadians find products from domestic Shopify merchants. Every visit queries the Shopify Global Catalog in real time — no stored product database, no stale images. Tagline: *By Canadians, For Canadians.*
+**Buy Canadian** is a live discovery site that helps Canadians find products from domestic Shopify merchants. Listings come from the Shopify Global Catalog — no product database on our servers. Tagline: *By Canadians, For Canadians.*
 
 ### Why WebMCP is a strong fit
 
@@ -33,7 +33,7 @@ Buy Canadian registers **WebMCP tools** on the client that call the same live Ca
 ### Implementation
 
 - **Browser:** [`public/js/webmcp.js`](public/js/webmcp.js) — `document.modelContext.registerTool()` (with `navigator.modelContext` fallback), AbortController lifecycle, five catalog tools
-- **Server:** Express proxy to Shopify Catalog MCP ([`src/catalog-client.js`](src/catalog-client.js)), concurrency cap, no-store caching
+- **Server:** Express proxy to Shopify Catalog MCP ([`src/catalog-client.js`](src/catalog-client.js)), concurrency cap, in-flight coalescing, no-store API responses
 - **Agent profile:** [`public/.well-known/ucp-agent.json`](public/.well-known/ucp-agent.json) for UCP catalog capabilities
 
 ### Impact
