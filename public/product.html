@@ -66,6 +66,7 @@
         initSearchForm,
         mountLogoMark,
         escapeHtml,
+        ratingHtml,
         showError,
         breadcrumbHtml,
       } from "/js/app.js";
@@ -163,6 +164,7 @@
             </div>
             <div class="product-info">
               ${badge}
+              ${ratingHtml(product.rating)}
               <h1>${escapeHtml(product.title)}</h1>
               <div class="product-price">${escapeHtml(price)}</div>
               ${seller ? `<div class="product-seller">Sold by ${escapeHtml(seller)}</div>` : ""}

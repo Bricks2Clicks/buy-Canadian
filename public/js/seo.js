@@ -226,6 +226,20 @@ export function productSchema(product, pagePath) {
       : undefined,
   };
 
+  const ratingValue = Number(product.rating?.value);
+  const ratingCount = Number(product.rating?.count);
+  if (Number.isFinite(ratingValue) && Number.isFinite(ratingCount) && ratingCount > 0) {
+    const best = Number(product.rating.scale_max);
+    const worst = Number(product.rating.scale_min);
+    schema.aggregateRating = {
+      '@type': 'AggregateRating',
+      ratingValue,
+      reviewCount: ratingCount,
+      bestRating: Number.isFinite(best) && best > 0 ? best : 5,
+      worstRating: Number.isFinite(worst) ? worst : 1,
+    };
+  }
+
   return schema;
 }
 

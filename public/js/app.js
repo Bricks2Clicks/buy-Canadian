@@ -41,6 +41,48 @@ export function escapeHtml(str) {
     .replace(/"/g, '&quot;');
 }
 
+const STAR_PATH =
+  'M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z';
+
+function starSlot(kind) {
+  const full = `<svg class="product-rating-star product-rating-star--full" viewBox="0 0 24 24"><path d="${STAR_PATH}"/></svg>`;
+  const empty = `<svg class="product-rating-star product-rating-star--empty" viewBox="0 0 24 24"><path d="${STAR_PATH}"/></svg>`;
+  if (kind === 'full') {
+    return `<span class="product-rating-star-slot">${full}</span>`;
+  }
+  if (kind === 'half') {
+    return `<span class="product-rating-star-slot product-rating-star-slot--half">${empty}<span class="product-rating-star-clip">${full}</span></span>`;
+  }
+  return `<span class="product-rating-star-slot">${empty}</span>`;
+}
+
+/** Stars + score (count). Empty string when Catalog has no usable rating. */
+export function ratingHtml(rating) {
+  const value = Number(rating?.value);
+  const count = Number(rating?.count);
+  if (!Number.isFinite(value) || !Number.isFinite(count) || count <= 0) {
+    return '';
+  }
+  const scaleMaxRaw = Number(rating.scale_max);
+  const scaleMax = Number.isFinite(scaleMaxRaw) && scaleMaxRaw > 0 ? scaleMaxRaw : 5;
+  const filled = Math.max(0, Math.min(5, (value / scaleMax) * 5));
+  const stars = [];
+  for (let i = 0; i < 5; i += 1) {
+    const remainder = filled - i;
+    let kind = 'empty';
+    if (remainder >= 1) kind = 'full';
+    else if (remainder >= 0.5) kind = 'half';
+    stars.push(starSlot(kind));
+  }
+  const score = Number.isInteger(value) ? String(value) : value.toFixed(1);
+  const countLabel = count.toLocaleString('en-CA');
+  const label = `Rated ${score} out of ${scaleMax} from ${countLabel} ratings`;
+  return `<div class="product-rating" aria-label="${escapeHtml(label)}">
+    <span class="product-rating-stars" aria-hidden="true">${stars.join('')}</span>
+    <span class="product-rating-meta">${escapeHtml(score)} (${escapeHtml(countLabel)})</span>
+  </div>`;
+}
+
 export function productCardHtml(product, categorySlug) {
   let href = `/product.html?id=${encodeURIComponent(product.id)}&variant=${encodeURIComponent(product.variantId)}`;
   if (categorySlug) {
@@ -58,6 +100,7 @@ export function productCardHtml(product, categorySlug) {
       <div class="product-card-image">${img}</div>
       <div class="product-card-body">
         ${badge}
+        ${ratingHtml(product.rating)}
         <h3 class="product-card-title">${escapeHtml(product.title)}</h3>
         <div class="product-card-price">${escapeHtml(product.price)}</div>
         <div class="product-card-seller">${escapeHtml(product.sellerName)}</div>

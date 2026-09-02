@@ -52,6 +52,33 @@ const usdProduct = {
 assert.equal(normalizeProductCard(usdProduct, undefined, 'CAD'), null);
 assert.ok(normalizeProductCard(usdProduct, undefined, 'USD'));
 
+const ratedCad = {
+  id: 'p2',
+  title: 'Rated CAD',
+  rating: { value: 4.9, scale_min: 1, scale_max: 5, count: 99 },
+  variants: [
+    {
+      id: 'v2',
+      availability: { available: true },
+      price: { amount: 5195, currency: 'CAD' },
+    },
+  ],
+};
+assert.deepEqual(normalizeProductCard(ratedCad, undefined, 'CAD').rating, {
+  value: 4.9,
+  count: 99,
+  scale_min: 1,
+  scale_max: 5,
+});
+assert.equal(
+  normalizeProductCard(
+    { ...ratedCad, rating: { value: 5, count: 0 } },
+    undefined,
+    'CAD',
+  ).rating,
+  undefined,
+);
+
 const merged = mergeListingProducts(
   [{ id: 'a', _order: 0 }],
   [{ id: 'a' }, { id: 'b' }],

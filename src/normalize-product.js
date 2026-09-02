@@ -36,6 +36,24 @@ function variantBuyUrl(variant) {
   return variant.url || variant.checkout_url || null;
 }
 
+/** Catalog rating when it has a numeric average and at least one review. */
+export function usableRating(rating) {
+  if (!rating || typeof rating !== 'object') return null;
+  const value = Number(rating.value);
+  const count = Number(rating.count);
+  if (!Number.isFinite(value) || !Number.isFinite(count) || count <= 0) {
+    return null;
+  }
+  const scaleMin = Number(rating.scale_min);
+  const scaleMax = Number(rating.scale_max);
+  return {
+    value,
+    count,
+    scale_min: Number.isFinite(scaleMin) ? scaleMin : 1,
+    scale_max: Number.isFinite(scaleMax) && scaleMax > 0 ? scaleMax : 5,
+  };
+}
+
 /** Drop offers priced in a different currency than the buyer destination (e.g. USD on CA). */
 export function matchesExpectedCurrency(actual, expected) {
   if (!expected) return true;
@@ -63,6 +81,7 @@ export function normalizeProductCard(product, preferredVariantId, expectedCurren
     product.media?.[0]?.url ||
     null;
   const seller = variant.seller || product.variants?.[0]?.seller;
+  const rating = usableRating(product.rating) || usableRating(variant.rating);
 
   return {
     id: product.id,
@@ -77,6 +96,7 @@ export function normalizeProductCard(product, preferredVariantId, expectedCurren
     sellerDomain: seller?.domain,
     buyUrl: withBuyCanadianUtm(variantBuyUrl(variant)),
     mentionsOrigin: mentionsMadeInCanada(product),
+    ...(rating ? { rating } : {}),
   };
 }
 
@@ -134,7 +154,7 @@ export function normalizeProductDetail(product, expectedCurrency = 'CAD') {
       : null,
     options: product.options,
     metadata: product.metadata,
-    rating: product.rating,
+    rating: usableRating(product.rating),
     variants: inStockVariants,
     mentionsOrigin: mentionsMadeInCanada(product),
   };
