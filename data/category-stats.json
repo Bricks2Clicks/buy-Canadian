@@ -1,34 +1,24 @@
 {
-  "measuredAt": "2026-08-28T19:46:03.943Z",
+  "measuredAt": "2026-09-03T04:13:58.254Z",
   "catalogId": "01m12qne33qw184bkw337397hj",
-  "query": "made in Canada; fabriqué au Canada; fabrique au Canada",
+  "query": "made in Canada; fabriqué au Canada",
   "destination": "CA",
   "note": "eligibleCount is the max pagination.total_count across separate English/French origin phrase searches. tile is a sample preview image from the same pass (refresh quarterly). Not exact inventory.",
   "categories": [
     {
       "slug": "ae",
       "name": "Arts & Entertainment",
-      "eligibleCount": 441,
+      "eligibleCount": 448,
       "tile": {
-        "image": "https://cdn.shopify.com/s/files/1/0293/8830/8559/files/5_362f2f66-c9b6-402c-96f3-c27e2451d877.png",
-        "imageAlt": "MADE IN CANADA Eco Vinyl Sticker",
-        "title": "MADE IN CANADA Eco Vinyl Sticker"
-      }
-    },
-    {
-      "slug": "me",
-      "name": "Media",
-      "eligibleCount": 431,
-      "tile": {
-        "image": "https://cdn.shopify.com/s/files/1/1294/9703/files/taffy-tales-oh-canada-book.png",
-        "imageAlt": "Children's book titled 'Oh, Canada!' with colorful Canadian specific illustrations and text on the cover.",
-        "title": "Oh, Canada! Lift the Flap Board Book"
+        "image": "https://cdn.shopify.com/s/files/1/0275/7420/6525/files/sorry-patch-my-home-apparel-made-in-canada-1212568313.jpg",
+        "imageAlt": "My Home Apparel Patch Sorry Patch - Made in Canada",
+        "title": "Sorry Patch - Made in Canada"
       }
     },
     {
       "slug": "hg",
       "name": "Home & Garden",
-      "eligibleCount": 427,
+      "eligibleCount": 445,
       "tile": {
         "image": "https://cdn.shopify.com/s/files/1/2314/8475/products/2401-11-00.jpg",
         "imageAlt": "Meyer Confederation Stainless Steel Cookware Set, 11-Piece, Made in Canada",
@@ -38,17 +28,27 @@
     {
       "slug": "aa",
       "name": "Apparel & Accessories",
-      "eligibleCount": 424,
+      "eligibleCount": 431,
       "tile": {
-        "image": "https://cdn.shopify.com/s/files/1/0472/6493/files/Lead-Navy-Made-in-Canada-Sweater-5Z7A6968_1fdcf829-3fff-49e6-9a6a-2a65ae817265.jpg",
-        "imageAlt": "100% Cotton Fleece Made in Canada Sweatshirt Navy - Unisex - Province of Canada",
-        "title": "Made in Canada Sweatshirt Navy - Unisex"
+        "image": "https://cdn.shopify.com/s/files/1/0472/6493/files/Lead-MADE-IN-CANADA-Heather-Grey-Sweatshirt-5Z7A7041.jpg",
+        "imageAlt": "Made in Canada Sweatshirt Heather Grey Fleece - Unisex - Province of Canada",
+        "title": "Made in Canada Sweatshirt Heather Grey - Unisex"
+      }
+    },
+    {
+      "slug": "me",
+      "name": "Media",
+      "eligibleCount": 423,
+      "tile": {
+        "image": "https://cdn.shopify.com/s/files/1/1294/9703/files/taffy-tales-oh-canada-book.png",
+        "imageAlt": "Children's book titled 'Oh, Canada!' with colorful Canadian specific illustrations and text on the cover.",
+        "title": "Oh, Canada! Lift the Flap Board Book"
       }
     },
     {
       "slug": "fb",
       "name": "Food, Beverages & Tobacco",
-      "eligibleCount": 420,
+      "eligibleCount": 418,
       "tile": {
         "image": "https://cdn.shopify.com/s/files/1/1294/9703/files/mapletea.png",
         "imageAlt": "Canadian made maple tea and maple cookies in a red and white reusable tin.",
@@ -56,9 +56,19 @@
       }
     },
     {
+      "slug": "vp",
+      "name": "Vehicles & Parts",
+      "eligibleCount": 409,
+      "tile": {
+        "image": "https://cdn.shopify.com/s/files/1/0601/2007/2405/files/made-in-canada-license-plates-6-x-12-aluminum-plate-297.jpg",
+        "imageAlt": "6x12\" Aluminum License Plate Black with Circular design with Made in Canada & a centered bright red maple leaf & Est.1867",
+        "title": "Made in Canada: License Plates"
+      }
+    },
+    {
       "slug": "fr",
       "name": "Furniture",
-      "eligibleCount": 399,
+      "eligibleCount": 398,
       "tile": {
         "image": "https://cdn.shopify.com/s/files/1/2660/5202/files/shopify-image_9108ab31-de71-46f2-8cac-58f66db9bff1.jpg",
         "imageAlt": "Made in Canada Lennox 79\" Chenille Fabric Sofa with Reversible Cushions and Accent Pillows - Taupe | Sofa Lennox de 79 po fabriqué au Canada en tissu de chenille avec coussins réversibles et coussins décoratifs - taupe",
@@ -68,7 +78,7 @@
     {
       "slug": "hb",
       "name": "Health & Beauty",
-      "eligibleCount": 381,
+      "eligibleCount": 390,
       "tile": {
         "image": "https://cdn.shopify.com/s/files/1/0249/3241/7583/products/Whey-Concentrate-1kg-Vanilla_43d0f728-79ca-4737-b38e-7932c83b7fd3.jpg",
         "imageAlt": "Whey Protein Concentrate",
@@ -76,19 +86,9 @@
       }
     },
     {
-      "slug": "ap",
-      "name": "Animals & Pet Supplies",
-      "eligibleCount": 377,
-      "tile": {
-        "image": "https://cdn.shopify.com/s/files/1/0662/5909/1681/files/collapsible-dog-crate-20-622742.jpg",
-        "imageAlt": "IATA compliant dog crate with dog inside demonstrating spacious comfort",
-        "title": "Collapsible Dog Crate"
-      }
-    },
-    {
       "slug": "ha",
       "name": "Hardware",
-      "eligibleCount": 377,
+      "eligibleCount": 362,
       "tile": {
         "image": "https://cdn.shopify.com/s/files/1/0782/2077/files/gma-solar-energy-default-title-275-watt-poly-gma-solar-panel-33336956944481.png",
         "imageAlt": "275W GMA Solar Poly Panel from The Cabin Depot, made in Canada. Offers quantity discounts on eco-friendly energy solutions.",
@@ -96,19 +96,19 @@
       }
     },
     {
-      "slug": "vp",
-      "name": "Vehicles & Parts",
-      "eligibleCount": 368,
+      "slug": "ap",
+      "name": "Animals & Pet Supplies",
+      "eligibleCount": 354,
       "tile": {
-        "image": "https://cdn.shopify.com/s/files/1/0601/2007/2405/files/made-in-canada-license-plates-6-x-12-aluminum-plate-297.jpg",
-        "imageAlt": "6x12\" Aluminum License Plate Black with Circular design with Made in Canada & a centered bright red maple leaf & Est.1867",
-        "title": "Made in Canada: License Plates"
+        "image": "https://cdn.shopify.com/s/files/1/0483/9895/8744/files/acana-prairie-poultry-dog-food-dry-dog-food-acana-acana-dry-dog-food-064992560218-492688.webp",
+        "imageAlt": "ACANA Prairie Poultry Dog Food - Dry Dog Food- ACANA - PetToba-ACANA",
+        "title": "ACANA Prairie Poultry Dog Food - Dry Dog Food- ACANA"
       }
     },
     {
       "slug": "tg",
       "name": "Toys & Games",
-      "eligibleCount": 354,
+      "eligibleCount": 347,
       "tile": {
         "image": "https://cdn.shopify.com/s/files/1/1294/9703/files/nosglow.jpg",
         "imageAlt": "Painting on puzzle box of Parliament cityscape with a Canadian flag against a sunset sky.",
@@ -116,9 +116,19 @@
       }
     },
     {
+      "slug": "sg",
+      "name": "Sporting Goods",
+      "eligibleCount": 342,
+      "tile": {
+        "image": "https://cdn.shopify.com/s/files/1/1366/7345/products/Pro_Stock_Hockey_Stick_-_Pro_Blackout_-_All_Black_Composite.jpg",
+        "imageAlt": "Home of the Pro Blackout - HockeyStickMan Canada",
+        "title": "Pro Blackout™ (Extra Lite)"
+      }
+    },
+    {
       "slug": "os",
       "name": "Office Supplies",
-      "eligibleCount": 348,
+      "eligibleCount": 319,
       "tile": {
         "image": "https://cdn.shopify.com/s/files/1/0669/9676/4905/files/116119_2026.png",
         "imageAlt": "Round sticker with red maple leaf and 'Made in Canada' text on a white background",
@@ -126,19 +136,9 @@
       }
     },
     {
-      "slug": "sg",
-      "name": "Sporting Goods",
-      "eligibleCount": 348,
-      "tile": {
-        "image": "https://cdn.shopify.com/s/files/1/0314/1049/files/Blue-lite-main.jpg",
-        "imageAlt": "Pro Blackout™ Blue Lite",
-        "title": "Pro Blackout™ Blue Lite"
-      }
-    },
-    {
       "slug": "el",
       "name": "Electronics",
-      "eligibleCount": 329,
+      "eligibleCount": 312,
       "tile": {
         "image": "https://cdn.shopify.com/s/files/1/2719/6506/files/3DPCHTPLABlack_eaba32f3-7dad-4f16-a2e0-51db12e76e19.png",
         "imageAlt": "Black - Canadian-made ASA Filament - 1.75mm, 1kg 3D Printing Canada",
@@ -146,19 +146,9 @@
       }
     },
     {
-      "slug": "lb",
-      "name": "Luggage & Bags",
-      "eligibleCount": 267,
-      "tile": {
-        "image": "https://cdn.shopify.com/s/files/1/0353/8478/7075/products/40_OFFSITE-WIDE_2.jpg",
-        "imageAlt": "The Shield Duffle- Black Full-Grain Leather Duffle Bag Made in Canada",
-        "title": "The Shield Duffle- Black Full-Grain Leather Duffle Bag Made in Canada"
-      }
-    },
-    {
       "slug": "bi",
       "name": "Business & Industrial",
-      "eligibleCount": 251,
+      "eligibleCount": 282,
       "tile": {
         "image": "https://cdn.shopify.com/s/files/1/0255/6234/9604/products/breatheTeq-KN95-blk_MEDIUM_4b88b418-8ece-49a2-aba6-4fda8548d429.png",
         "imageAlt": "BreatheTeq KN95 adult black earloop mask for adults made in Canada",
@@ -166,19 +156,29 @@
       }
     },
     {
+      "slug": "lb",
+      "name": "Luggage & Bags",
+      "eligibleCount": 261,
+      "tile": {
+        "image": "https://cdn.shopify.com/s/files/1/0019/8770/6944/files/Maclean_s_tote_red_text.png",
+        "imageAlt": "Maclean's Made-in-Canada Tote Bag: Natural",
+        "title": "Maclean's Made-in-Canada Tote Bag: Natural"
+      }
+    },
+    {
       "slug": "bt",
       "name": "Baby & Toddler",
-      "eligibleCount": 222,
+      "eligibleCount": 220,
       "tile": {
-        "image": "https://cdn.shopify.com/s/files/1/0821/4282/2706/files/Niuriss_Toddler.png",
-        "imageAlt": "Niuriss Toddler Formula Can",
-        "title": "Niuriss Toddler Formula"
+        "image": "https://cdn.shopify.com/s/files/1/0821/4282/2706/files/image.jpg",
+        "imageAlt": "Niuriss Infant Formula Can",
+        "title": "Niuriss Infant Formula"
       }
     },
     {
       "slug": "so",
       "name": "Software",
-      "eligibleCount": 156,
+      "eligibleCount": 123,
       "tile": {
         "image": "https://cdn.shopify.com/s/files/1/0308/9652/1355/products/MadeInCanadaBBSUB754-02.jpg",
         "imageAlt": "Made In Canada, Retro Canada Sublimation Design",
@@ -188,7 +188,7 @@
     {
       "slug": "co",
       "name": "Cameras & Optics",
-      "eligibleCount": 31,
+      "eligibleCount": 41,
       "tile": {
         "image": "https://cdn.shopify.com/s/files/1/0333/1778/1637/files/4371748-gf.jpg",
         "imageAlt": "Mat Neutral Ph Black - 16x20/11x14\"",
@@ -198,7 +198,7 @@
     {
       "slug": "rc",
       "name": "Religious & Ceremonial",
-      "eligibleCount": 24,
+      "eligibleCount": 18,
       "tile": {
         "image": "https://cdn.shopify.com/s/files/1/1844/0579/files/NorthernHeritageOnTable4.jpg",
         "imageAlt": "Northern Heritage Urn: Custom Laser Engraved Wooden Cremation Urn | Made in Canada",
