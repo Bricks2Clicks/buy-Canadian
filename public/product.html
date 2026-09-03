@@ -51,12 +51,17 @@
               <option value="CA">Canada</option>
             </select>
             <p class="footer-nav">
-              <a href="/about.html">About</a> · <a href="/faq.html">FAQ</a>
+              <a href="/about.html">About</a>&nbsp; · &nbsp;<a href="/faq.html"
+                >FAQ</a
+              >
             </p>
           </div>
         </div>
         <div class="footer-links">
-          &copy; <span id="year"></span> Buy Canadian
+          &copy; <span id="year">2026</span> Buy Canadian by
+          <a href="https://bricks2clicks.online/" target="_blank"
+            >Bricks2Clicks.Online</a
+          >
         </div>
       </div>
     </footer>
@@ -126,8 +131,51 @@
         return items;
       }
 
+      function variantSourceKey(variant) {
+        return variant.sellerId || variant.sellerDomain || variant.sellerName || "";
+      }
+
+      function hasMultipleSources(variants) {
+        const keys = new Set(
+          variants.map(variantSourceKey).filter(Boolean),
+        );
+        return keys.size > 1;
+      }
+
+      function variantOptionLabel(variant, productTitle) {
+        const title = variant.title || productTitle || variant.price || "";
+        const parts = [title];
+        if (variant.price) parts.push(variant.price);
+        if (variant.sellerName) parts.push(variant.sellerName);
+        return parts.join(" — ");
+      }
+
+      function sellerLineHtml(variants) {
+        const leadSeller = variants[0]?.sellerName;
+        if (!leadSeller) return "";
+        const others = hasMultipleSources(variants) ? " and others" : "";
+        return `<div class="product-seller">Sold by ${escapeHtml(leadSeller)}${others}</div>`;
+      }
+
+      function compareVariantsByPriceThenRating(a, b) {
+        const priceA = Number(a.priceRaw);
+        const priceB = Number(b.priceRaw);
+        const aHasPrice = Number.isFinite(priceA);
+        const bHasPrice = Number.isFinite(priceB);
+        if (aHasPrice && bHasPrice && priceA !== priceB) return priceA - priceB;
+        if (aHasPrice !== bHasPrice) return aHasPrice ? -1 : 1;
+        const ratingA = Number(a.rating?.value);
+        const ratingB = Number(b.rating?.value);
+        return (
+          (Number.isFinite(ratingB) ? ratingB : 0) -
+          (Number.isFinite(ratingA) ? ratingA : 0)
+        );
+      }
+
       function render(product) {
-        const variants = product.variants || [];
+        const variants = [...(product.variants || [])].sort(
+          compareVariantsByPriceThenRating,
+        );
         let active =
           variants.find((v) => v.id === selectedVariantId) || variants[0];
         if (!active && variants.length) active = variants[0];
@@ -149,13 +197,12 @@
             ? `<div class="variant-list">${variants
                 .map(
                   (v) =>
-                    `<button type="button" class="variant-option ${v.id === selectedVariantId ? "selected" : ""}" data-variant="${escapeHtml(v.id)}">${escapeHtml(v.title || v.price)} — ${escapeHtml(v.price)}</button>`,
+                    `<button type="button" class="variant-option ${v.id === selectedVariantId ? "selected" : ""}" data-variant="${escapeHtml(v.id)}">${escapeHtml(variantOptionLabel(v, product.title))}</button>`,
                 )
                 .join("")}</div>`
             : "";
 
         const price = active?.price || product.priceRange?.min || "";
-        const seller = active?.sellerName || "";
         const buyUrl = active?.buyUrl || "#";
 
         root.innerHTML = `
@@ -170,7 +217,7 @@
               ${ratingHtml(product.rating)}
               <h1>${escapeHtml(product.title)}</h1>
               <div class="product-price">${escapeHtml(price)}</div>
-              ${seller ? `<div class="product-seller">Sold by ${escapeHtml(seller)}</div>` : ""}
+              ${sellerLineHtml(variants)}
               ${variantButtons}
               <div class="cta-block">
                 <a class="btn btn-primary" id="buy-cta" href="${escapeHtml(buyUrl)}" target="_blank" rel="noopener">
@@ -216,7 +263,7 @@
             }),
           ),
         );
-        injectJsonLd(productSchema(product, pagePath));
+        injectJsonLd(productSchema({ ...product, variants }, pagePath));
 
         root.querySelectorAll(".variant-option").forEach((btn) => {
           btn.addEventListener("click", () => {

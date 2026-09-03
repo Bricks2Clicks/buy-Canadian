@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en-CA">
   <head>
     <script src="/js/gtag.js"></script>
@@ -19,7 +19,11 @@
         </a>
         <form class="search-form" id="header-search">
           <label class="sr-only" for="search-q">Search products</label>
-          <input id="search-q" name="q" type="search" placeholder="Search Canadian products…" />
+          <input
+            id="search-q"
+            name="q"
+            type="search"
+            placeholder="Search Canadian products…" />
           <button type="submit" class="btn btn-primary">Search</button>
         </form>
       </div>
@@ -28,12 +32,13 @@
     <main class="container">
       <div class="page-header">
         <h1 id="search-title">Search</h1>
-        <p id="search-subtitle">Live results including English or French origin wording</p>
       </div>
       <div id="status"></div>
       <div class="product-grid product-grid--listing" id="product-grid"></div>
       <div class="load-more-wrap" id="load-more-wrap" hidden>
-        <button type="button" class="btn btn-secondary" id="load-more">Load more</button>
+        <button type="button" class="btn btn-secondary" id="load-more">
+          Load more
+        </button>
       </div>
     </main>
 
@@ -44,16 +49,27 @@
             <p>
               Search combines your terms with “made in Canada” or “fabriqué au
               Canada” catalog wording. Origin is not guaranteed. Checkout is on
-              each merchant’s site.
+              each merchant's site.
             </p>
           </div>
           <div class="footer-meta">
             <label for="ships-to">Ships to</label>
-            <select id="ships-to"><option value="CA">Canada</option></select>
-            <p class="footer-nav"><a href="/about.html">About</a> · <a href="/faq.html">FAQ</a></p>
+            <select id="ships-to">
+              <option value="CA">Canada</option>
+            </select>
+            <p class="footer-nav">
+              <a href="/about.html">About</a>&nbsp; · &nbsp;<a href="/faq.html"
+                >FAQ</a
+              >
+            </p>
           </div>
         </div>
-        <div class="footer-links">&copy; <span id="year"></span> Buy Canadian</div>
+        <div class="footer-links">
+          &copy; <span id="year">2026</span> Buy Canadian by
+          <a href="https://bricks2clicks.online/" target="_blank"
+            >Bricks2Clicks.Online</a
+          >
+        </div>
       </div>
     </footer>
 
@@ -70,19 +86,19 @@
         getShipsTo,
         withOriginPass,
         needsFrenchOriginPass,
-      } from '/js/app.js';
+      } from "/js/app.js";
       import {
         applyPageSeo,
         injectJsonLd,
         breadcrumbSchema,
         itemListSchema,
-      } from '/js/seo.js';
+      } from "/js/seo.js";
       import {
         mergeListingProducts,
         readListing,
         searchListingKey,
         writeListing,
-      } from '/js/listing-store.js';
+      } from "/js/listing-store.js";
 
       mountLogoMark();
 
@@ -90,14 +106,14 @@
       initFooter();
 
       const params = new URLSearchParams(window.location.search);
-      const q = params.get('q') || '';
+      const q = params.get("q") || "";
       if (!q.trim()) {
-        window.location.href = '/';
-        throw new Error('missing q');
+        window.location.href = "/";
+        throw new Error("missing q");
       }
 
-      document.getElementById('search-q').value = q;
-      document.getElementById('search-title').textContent = `Search: ${q}`;
+      document.getElementById("search-q").value = q;
+      document.getElementById("search-title").textContent = `Search: ${q}`;
 
       const pagePath = `/search.html?q=${encodeURIComponent(q)}`;
       applyPageSeo({
@@ -108,15 +124,15 @@
       });
       injectJsonLd(
         breadcrumbSchema([
-          { name: 'Home', path: '/' },
+          { name: "Home", path: "/" },
           { name: `Search: ${q}`, path: pagePath },
         ]),
       );
 
-      const statusEl = document.getElementById('status');
-      const grid = document.getElementById('product-grid');
-      const loadMoreWrap = document.getElementById('load-more-wrap');
-      const loadMoreBtn = document.getElementById('load-more');
+      const statusEl = document.getElementById("status");
+      const grid = document.getElementById("product-grid");
+      const loadMoreWrap = document.getElementById("load-more-wrap");
+      const loadMoreBtn = document.getElementById("load-more");
 
       let schemaInjected = false;
       let cursor = null;
@@ -140,16 +156,14 @@
         totalLoaded = allProducts.length;
         renderProductGrid(grid, allProducts);
         if (allProducts.length && !schemaInjected) {
-          injectJsonLd(
-            itemListSchema(allProducts, `Search: ${q}`, pagePath),
-          );
+          injectJsonLd(itemListSchema(allProducts, `Search: ${q}`, pagePath));
           schemaInjected = true;
         }
         if (totalLoaded === 0) {
           statusEl.innerHTML =
             '<p class="status-message">No in-stock products matched your search.</p>';
         } else {
-          statusEl.innerHTML = '';
+          statusEl.innerHTML = "";
         }
         loadMoreWrap.hidden = !(hasNextPage && totalLoaded < MAX_PRODUCTS);
       }
@@ -174,14 +188,15 @@
         if (loading) return;
         loading = true;
         loadMoreBtn.disabled = true;
-        statusEl.innerHTML = totalLoaded === 0 ? '<div class="spinner"></div>' : '';
+        statusEl.innerHTML =
+          totalLoaded === 0 ? '<div class="spinner"></div>' : "";
 
         const requestHadCursor = Boolean(cursor);
         let path = `/api/catalog/search?q=${encodeURIComponent(q)}&limit=50`;
         if (cursor) path += `&cursor=${encodeURIComponent(cursor)}`;
 
         try {
-          const data = await fetchJson(withOriginPass(path, 'en'));
+          const data = await fetchJson(withOriginPass(path, "en"));
           if (data.destinationBlocked) {
             showError(statusEl, data.message);
             loadMoreWrap.hidden = true;
@@ -192,7 +207,7 @@
 
           if (needsFrenchOriginPass(data, requestHadCursor)) {
             try {
-              const extra = await fetchJson(withOriginPass(path, 'fr'));
+              const extra = await fetchJson(withOriginPass(path, "fr"));
               if (!extra.destinationBlocked && extra.products?.length) {
                 ingestPage(extra, { updatePagination: false });
               }
@@ -210,7 +225,7 @@
         }
       }
 
-      loadMoreBtn.addEventListener('click', loadPage);
+      loadMoreBtn.addEventListener("click", loadPage);
 
       const cached = readListing(storeKey);
       if (cached) {

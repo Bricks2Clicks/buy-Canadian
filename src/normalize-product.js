@@ -100,24 +100,46 @@ export function normalizeProductCard(product, preferredVariantId, expectedCurren
   };
 }
 
+function ratingValue(rating) {
+  const value = Number(rating?.value);
+  return Number.isFinite(value) ? value : 0;
+}
+
+/** Lowest price first; at the same price, higher star rating first. */
+export function compareVariantsByPriceThenRating(a, b) {
+  const priceA = Number(a.priceRaw);
+  const priceB = Number(b.priceRaw);
+  const aHasPrice = Number.isFinite(priceA);
+  const bHasPrice = Number.isFinite(priceB);
+  if (aHasPrice && bHasPrice && priceA !== priceB) return priceA - priceB;
+  if (aHasPrice !== bHasPrice) return aHasPrice ? -1 : 1;
+  return ratingValue(b.rating) - ratingValue(a.rating);
+}
+
 export function normalizeProductDetail(product, expectedCurrency = 'CAD') {
   if (!productHasStock(product)) return null;
 
   const inStockVariants = (product.variants || [])
     .filter(isVariantInStock)
     .filter((v) => matchesExpectedCurrency(v.price?.currency, expectedCurrency))
-    .map((v) => ({
-      id: v.id,
-      title: v.title,
-      price: formatPrice(v.price?.amount, v.price?.currency),
-      priceRaw: v.price?.amount,
-      currency: v.price?.currency,
-      buyUrl: withBuyCanadianUtm(variantBuyUrl(v)),
-      sellerName: v.seller?.name,
-      sellerDomain: v.seller?.domain,
-      options: v.options,
-      availability: v.availability,
-    }));
+    .map((v) => {
+      const rating = usableRating(v.rating);
+      return {
+        id: v.id,
+        title: v.title,
+        price: formatPrice(v.price?.amount, v.price?.currency),
+        priceRaw: v.price?.amount,
+        currency: v.price?.currency,
+        buyUrl: withBuyCanadianUtm(variantBuyUrl(v)),
+        sellerName: v.seller?.name,
+        sellerDomain: v.seller?.domain,
+        sellerId: v.seller?.id,
+        ...(rating ? { rating } : {}),
+        options: v.options,
+        availability: v.availability,
+      };
+    })
+    .sort(compareVariantsByPriceThenRating);
 
   if (!inStockVariants.length) return null;
 
