@@ -4,7 +4,46 @@
     <script src="/js/gtag.js"></script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- crawler-meta:start -->
     <title>Search — Buy Canadian</title>
+    <meta
+      name="description"
+      content="Search live in-stock products from Canadian Shopify merchants, including made-in-Canada catalog wording. Ships within Canada." />
+    <meta name="robots" content="index, follow" />
+    <link
+      rel="canonical"
+      href="https://buycanadian.bricks2clicks.online/search.html" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="en_CA" />
+    <meta property="og:site_name" content="Buy Canadian" />
+    <meta
+      property="og:url"
+      content="https://buycanadian.bricks2clicks.online/search.html" />
+    <meta property="og:title" content="Search — Buy Canadian" />
+    <meta
+      property="og:description"
+      content="Search live in-stock products from Canadian Shopify merchants, including made-in-Canada catalog wording. Ships within Canada." />
+    <meta
+      property="og:image"
+      content="https://buycanadian.bricks2clicks.online/buyCanadian1200x627.png" />
+    <meta
+      property="og:image:alt"
+      content="Buy Canadian | By Canadians, For Canadians. Discover Canadian made products sold by Canadian merchants." />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="627" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Search — Buy Canadian" />
+    <meta
+      name="twitter:description"
+      content="Search live in-stock products from Canadian Shopify merchants, including made-in-Canada catalog wording. Ships within Canada." />
+    <meta
+      name="twitter:image"
+      content="https://buycanadian.bricks2clicks.online/buyCanadian1200x627.png" />
+    <meta
+      name="twitter:image:alt"
+      content="Buy Canadian | By Canadians, For Canadians. Discover Canadian made products sold by Canadian merchants." />
+    <!-- crawler-meta:end -->
     <link rel="stylesheet" href="/css/styles.css" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="icon" href="/favicon.ico" sizes="32x32" />
@@ -31,7 +70,12 @@
 
     <main class="container">
       <div class="page-header">
-        <h1 id="search-title">Search</h1>
+        <h1 id="search-title">Search Canadian products</h1>
+        <p id="search-intro">
+          Use the search box to find live in-stock products from Canadian
+          Shopify merchants. Results include catalog wording for “made in
+          Canada” or “fabriqué au Canada”. Origin is not guaranteed.
+        </p>
       </div>
       <div id="status"></div>
       <div class="product-grid product-grid--listing" id="product-grid"></div>
@@ -106,28 +150,33 @@
       initFooter();
 
       const params = new URLSearchParams(window.location.search);
-      const q = params.get("q") || "";
-      if (!q.trim()) {
-        window.location.href = "/";
-        throw new Error("missing q");
-      }
+      const q = (params.get("q") || "").trim();
+      const pagePath = q
+        ? `/search.html?q=${encodeURIComponent(q)}`
+        : "/search.html";
 
-      document.getElementById("search-q").value = q;
-      document.getElementById("search-title").textContent = `Search: ${q}`;
-
-      const pagePath = `/search.html?q=${encodeURIComponent(q)}`;
       applyPageSeo({
-        title: `Search: ${q} — Buy Canadian`,
-        description: `Live search results for “${q}” from Canadian Shopify merchants, including made-in-Canada catalog filter.`,
+        title: q
+          ? `Search: ${q} — Buy Canadian`
+          : "Search — Buy Canadian",
+        description: q
+          ? `Live search results for “${q}” from Canadian Shopify merchants, including made-in-Canada catalog filter.`
+          : "Search live in-stock products from Canadian Shopify merchants, including made-in-Canada catalog wording. Ships within Canada.",
         path: pagePath,
-        noindex: true,
+        noindex: Boolean(q),
       });
       injectJsonLd(
         breadcrumbSchema([
           { name: "Home", path: "/" },
-          { name: `Search: ${q}`, path: pagePath },
+          { name: q ? `Search: ${q}` : "Search", path: pagePath },
         ]),
       );
+
+      if (q) {
+      document.getElementById("search-q").value = q;
+      document.getElementById("search-title").textContent = `Search: ${q}`;
+      const searchIntro = document.getElementById("search-intro");
+      if (searchIntro) searchIntro.hidden = true;
 
       const statusEl = document.getElementById("status");
       const grid = document.getElementById("product-grid");
@@ -239,6 +288,7 @@
         applyListingState();
       } else {
         loadPage();
+      }
       }
     </script>
   </body>
