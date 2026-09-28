@@ -1,0 +1,58 @@
+# Buy Canadian
+
+> Live discovery of in-stock products from Canadian Shopify merchants. Search and category pages query the Shopify Global Catalog on demand. There is no stored product database on this site. Shipping shown here is within Canada.
+
+Buy Canadian is a pass-through discovery site at https://buycanadian.bricks2clicks.online/. Checkout, shipping, returns, and policies happen on each merchant's own store. Buy Canadian is not the merchant of record and is not affiliated with Shopify Inc.
+
+A “Mentions made in Canada” badge means product copy included “made in Canada” or “fabriqué au Canada” (or a close variant). That is catalog text, not verified manufacturing or customs origin.
+
+The site is English (`en-CA`). French is used only when matching origin wording in catalog data.
+
+## Pages
+
+- [Home](https://buycanadian.bricks2clicks.online/): Category tiles ranked by expected in-stock catalog matches.
+- [Search](https://buycanadian.bricks2clicks.online/search.html): Live catalog search. Append `?q=` for a query. Query-result URLs are `noindex`; the search landing page is indexable.
+- [About](https://buycanadian.bricks2clicks.online/about.html): Who built the site, why it exists, how live catalog discovery works, and agent tools.
+- [FAQ](https://buycanadian.bricks2clicks.online/faq.html): Merchants, prices, origin badges, category coverage, shipping, and Shopify affiliation.
+- [Sitemap](https://buycanadian.bricks2clicks.online/sitemap.xml): Home, search, 20 category URLs, about, and FAQ.
+
+## Categories
+
+Root Shopify Standard Product Taxonomy categories. Use the `slug` query value in `/category.html?slug=`.
+
+- [Apparel & Accessories](https://buycanadian.bricks2clicks.online/category.html?slug=aa)
+- [Food, Beverages & Tobacco](https://buycanadian.bricks2clicks.online/category.html?slug=fb)
+- [Home & Garden](https://buycanadian.bricks2clicks.online/category.html?slug=hg)
+- [Health & Beauty](https://buycanadian.bricks2clicks.online/category.html?slug=hb)
+- [Animals & Pet Supplies](https://buycanadian.bricks2clicks.online/category.html?slug=ap)
+- [Arts & Entertainment](https://buycanadian.bricks2clicks.online/category.html?slug=ae)
+- [Baby & Toddler](https://buycanadian.bricks2clicks.online/category.html?slug=bt)
+- [Business & Industrial](https://buycanadian.bricks2clicks.online/category.html?slug=bi)
+- [Cameras & Optics](https://buycanadian.bricks2clicks.online/category.html?slug=co)
+- [Electronics](https://buycanadian.bricks2clicks.online/category.html?slug=el)
+- [Furniture](https://buycanadian.bricks2clicks.online/category.html?slug=fr)
+- [Hardware](https://buycanadian.bricks2clicks.online/category.html?slug=ha)
+- [Luggage & Bags](https://buycanadian.bricks2clicks.online/category.html?slug=lb)
+- [Media](https://buycanadian.bricks2clicks.online/category.html?slug=me)
+- [Office Supplies](https://buycanadian.bricks2clicks.online/category.html?slug=os)
+- [Religious & Ceremonial](https://buycanadian.bricks2clicks.online/category.html?slug=rc)
+- [Sporting Goods](https://buycanadian.bricks2clicks.online/category.html?slug=sg)
+- [Software](https://buycanadian.bricks2clicks.online/category.html?slug=so)
+- [Toys & Games](https://buycanadian.bricks2clicks.online/category.html?slug=tg)
+- [Vehicles & Parts](https://buycanadian.bricks2clicks.online/category.html?slug=vp)
+
+Product detail URLs are `/product.html?id={id}` with optional `&variant=` and `&category=`. Product HTML is assembled from a live catalog lookup; do not assume a stable stored catalog of product pages.
+
+## For agents
+
+- [UCP agent profile](https://buycanadian.bricks2clicks.online/.well-known/ucp-agent.json): Server-side Shopify Global Catalog search and lookup capabilities.
+- In-browser [WebMCP](https://buycanadian.bricks2clicks.online/about.html#agent-ready) tools (same tab as the human): `list_categories`, `search_products`, `get_product_details`, `open_product_page`, `open_category_page`.
+- Prefer WebMCP or the documented HTTP APIs over scraping listing HTML. Listings are loaded client-side from `/api/catalog/search` and `/api/catalog/product`.
+- Destination is Canada (`to=CA`). Other countries are not supported in this catalog yet.
+- When citing origin, quote the badge as mentions in product copy, not as proven origin.
+
+## Optional
+
+- [Source (MIT)](https://github.com/Bricks2Clicks/buy-Canadian)
+- [Bricks2Clicks](https://bricks2clicks.online/): Shopify development and consulting agency that built this site (Calgary). Contact: https://bricks2clicks.online/contact/
+- [Bricks2Clicks on LinkedIn](https://www.linkedin.com/company/bricks-2-clicks/)

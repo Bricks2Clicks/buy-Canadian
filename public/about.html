@@ -4,10 +4,124 @@
     <script src="/js/gtag.js"></script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- crawler-meta:start -->
     <title>About — Buy Canadian</title>
     <meta
       name="description"
-      content="Who built Buy Canadian, why it exists, and how live Shopify Global Catalog discovery works for Canadian shoppers." />
+      content="Who built Buy Canadian, why it exists, and how live catalog discovery works for Canadian shoppers and AI assistants." />
+    <meta name="robots" content="index, follow" />
+    <link
+      rel="canonical"
+      href="https://buycanadian.bricks2clicks.online/about.html" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="en_CA" />
+    <meta property="og:site_name" content="Buy Canadian" />
+    <meta
+      property="og:url"
+      content="https://buycanadian.bricks2clicks.online/about.html" />
+    <meta property="og:title" content="About — Buy Canadian" />
+    <meta
+      property="og:description"
+      content="Who built Buy Canadian, why it exists, and how live catalog discovery works for Canadian shoppers and AI assistants." />
+    <meta
+      property="og:image"
+      content="https://buycanadian.bricks2clicks.online/buyCanadian1200x627.png" />
+    <meta
+      property="og:image:alt"
+      content="Buy Canadian | By Canadians, For Canadians. Discover Canadian made products sold by Canadian merchants." />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="627" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="About — Buy Canadian" />
+    <meta
+      name="twitter:description"
+      content="Who built Buy Canadian, why it exists, and how live catalog discovery works for Canadian shoppers and AI assistants." />
+    <meta
+      name="twitter:image"
+      content="https://buycanadian.bricks2clicks.online/buyCanadian1200x627.png" />
+    <meta
+      name="twitter:image:alt"
+      content="Buy Canadian | By Canadians, For Canadians. Discover Canadian made products sold by Canadian merchants." />
+    <!-- crawler-meta:end -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "AboutPage",
+            "@id": "https://buycanadian.bricks2clicks.online/about.html#webpage",
+            "name": "About — Buy Canadian",
+            "url": "https://buycanadian.bricks2clicks.online/about.html",
+            "inLanguage": "en-CA",
+            "description": "Who built Buy Canadian, why it exists, and how live catalog discovery works for Canadian shoppers and AI assistants.",
+            "isPartOf": {
+              "@id": "https://buycanadian.bricks2clicks.online/#website"
+            },
+            "about": {
+              "@id": "https://buycanadian.bricks2clicks.online/#organization"
+            },
+            "mainEntity": {
+              "@id": "https://buycanadian.bricks2clicks.online/#organization"
+            },
+            "breadcrumb": {
+              "@id": "https://buycanadian.bricks2clicks.online/about.html#breadcrumb"
+            }
+          },
+          {
+            "@type": "BreadcrumbList",
+            "@id": "https://buycanadian.bricks2clicks.online/about.html#breadcrumb",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://buycanadian.bricks2clicks.online/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "About",
+                "item": "https://buycanadian.bricks2clicks.online/about.html"
+              }
+            ]
+          },
+          {
+            "@type": "Organization",
+            "@id": "https://buycanadian.bricks2clicks.online/#organization",
+            "name": "Buy Canadian",
+            "alternateName": "By Canadians, For Canadians",
+            "url": "https://buycanadian.bricks2clicks.online/",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://buycanadian.bricks2clicks.online/apple-touch-icon.png",
+              "width": 180,
+              "height": 180
+            },
+            "image": "https://buycanadian.bricks2clicks.online/buyCanadian1200x627.png",
+            "description": "Discover products from Canadian Shopify merchants. Live search from the Shopify Global Catalog — no stored product database. Ships within Canada.",
+            "areaServed": { "@type": "Country", "name": "Canada" },
+            "sameAs": [
+              "https://github.com/Bricks2Clicks/buy-Canadian"
+            ],
+            "founder": {
+              "@type": "Person",
+              "name": "Sue Steckle",
+              "jobTitle": "Shopify developer and consultant",
+              "url": "https://bricks2clicks.online/"
+            },
+            "parentOrganization": {
+              "@type": "Organization",
+              "name": "Bricks2Clicks",
+              "url": "https://bricks2clicks.online/",
+              "sameAs": [
+                "https://www.linkedin.com/company/bricks-2-clicks/"
+              ]
+            }
+          }
+        ]
+      }
+    </script>
     <link rel="stylesheet" href="/css/styles.css" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="icon" href="/favicon.ico" sizes="32x32" />
@@ -201,13 +315,7 @@
     <script type="module" src="/js/webmcp.js"></script>
     <script type="module">
       import { initFooter, initSearchForm, mountLogoMark } from "/js/app.js";
-      import {
-        applyPageSeo,
-        injectJsonLd,
-        aboutPageSchema,
-        webSiteSchema,
-        organizationSchema,
-      } from "/js/seo.js";
+      import { applyPageSeo } from "/js/seo.js";
 
       applyPageSeo({
         title: "About — Buy Canadian",
@@ -215,9 +323,6 @@
           "Who built Buy Canadian, why it exists, and how live catalog discovery works for Canadian shoppers and AI assistants.",
         path: "/about.html",
       });
-      injectJsonLd(webSiteSchema());
-      injectJsonLd(organizationSchema());
-      injectJsonLd(aboutPageSchema());
 
       mountLogoMark();
       document.getElementById("year").textContent = new Date().getFullYear();

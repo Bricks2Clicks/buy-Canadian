@@ -4,7 +4,47 @@
     <script src="/js/gtag.js"></script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- crawler-meta:start -->
     <title>FAQ — Buy Canadian</title>
+    <meta
+      name="description"
+      content="Frequently asked questions about Buy Canadian — live catalog discovery, made-in-Canada search, merchants, shipping, and disclaimers." />
+    <meta name="robots" content="index, follow" />
+    <link
+      rel="canonical"
+      href="https://buycanadian.bricks2clicks.online/faq.html" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="en_CA" />
+    <meta property="og:site_name" content="Buy Canadian" />
+    <meta
+      property="og:url"
+      content="https://buycanadian.bricks2clicks.online/faq.html" />
+    <meta property="og:title" content="FAQ — Buy Canadian" />
+    <meta
+      property="og:description"
+      content="Frequently asked questions about Buy Canadian — live catalog discovery, made-in-Canada search, merchants, shipping, and disclaimers." />
+    <meta
+      property="og:image"
+      content="https://buycanadian.bricks2clicks.online/buyCanadian1200x627.png" />
+    <meta
+      property="og:image:alt"
+      content="Buy Canadian | By Canadians, For Canadians. Discover Canadian made products sold by Canadian merchants." />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="627" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="FAQ — Buy Canadian" />
+    <meta
+      name="twitter:description"
+      content="Frequently asked questions about Buy Canadian — live catalog discovery, made-in-Canada search, merchants, shipping, and disclaimers." />
+    <meta
+      name="twitter:image"
+      content="https://buycanadian.bricks2clicks.online/buyCanadian1200x627.png" />
+    <meta
+      name="twitter:image:alt"
+      content="Buy Canadian | By Canadians, For Canadians. Discover Canadian made products sold by Canadian merchants." />
+    <!-- crawler-meta:end -->
+    <!-- faq-jsonld -->
     <link rel="stylesheet" href="/css/styles.css" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="icon" href="/favicon.ico" sizes="32x32" />
@@ -211,51 +251,7 @@
     <script type="module" src="/js/webmcp.js"></script>
     <script type="module">
       import { initFooter, initSearchForm, mountLogoMark } from "/js/app.js";
-      import {
-        applyPageSeo,
-        injectJsonLd,
-        faqPageSchema,
-        webSiteSchema,
-        breadcrumbSchema,
-      } from "/js/seo.js";
-
-      const faqItems = [
-        {
-          question: "What is Buy Canadian?",
-          answer:
-            "Buy Canadian is a discovery site that helps you find products from Canadian Shopify merchants. We search the Shopify Global Catalog live on first visit to a category or search — we do not maintain our own product database or cache images on our servers.",
-        },
-        {
-          question: "Are all products made in Canada?",
-          answer:
-            "No. We search for “made in Canada” and “fabriqué au Canada” in catalog text and may show a badge when product copy includes similar English or French wording. That is not verified manufacturing or customs origin.",
-        },
-        {
-          question: "Who sells these products?",
-          answer:
-            "Each listing is sold by an independent Shopify merchant. Checkout happens on the merchant's store. Buy Canadian is not the merchant of record.",
-        },
-        {
-          question: "Are prices accurate?",
-          answer:
-            "Prices come from live Catalog data at search time. The merchant's storefront may show different prices or promotions.",
-        },
-        {
-          question: "Shipping and returns",
-          answer:
-            "Shipping and returns are set by each merchant. Buy Canadian does not ship products or process returns.",
-        },
-        {
-          question: "Are you affiliated with Shopify?",
-          answer:
-            "No. Buy Canadian uses Shopify's Global Catalog API but is an independent project.",
-        },
-        {
-          question: "Shipping outside Canada",
-          answer:
-            "The site currently searches a catalog locked to Canadian buyers and shipping within Canada.",
-        },
-      ];
+      import { applyPageSeo } from "/js/seo.js";
 
       applyPageSeo({
         title: "FAQ — Buy Canadian",
@@ -263,14 +259,6 @@
           "Frequently asked questions about Buy Canadian — live catalog discovery, made-in-Canada search, merchants, shipping, and disclaimers.",
         path: "/faq.html",
       });
-      injectJsonLd(webSiteSchema());
-      injectJsonLd(faqPageSchema(faqItems));
-      injectJsonLd(
-        breadcrumbSchema([
-          { name: "Home", path: "/" },
-          { name: "FAQ", path: "/faq.html" },
-        ]),
-      );
 
       mountLogoMark();
       document.getElementById("year").textContent = new Date().getFullYear();

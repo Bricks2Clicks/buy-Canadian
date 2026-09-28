@@ -18,8 +18,16 @@ import {
   MAX_HOME_TILES_PER_REQUEST,
   parseSlugList,
 } from './src/category-tile.js';
+import {
+  buildSitemapXml,
+  categoryCrawlerMeta,
+  productCrawlerMeta,
+  searchCrawlerMeta,
+  sendHtmlPage,
+} from './src/crawler-meta.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const publicDir = path.join(__dirname, 'public');
 const app = express();
 
 const NO_STORE = {
@@ -28,7 +36,43 @@ const NO_STORE = {
 };
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+
+app.get('/category.html', (req, res) => {
+  sendHtmlPage(
+    res,
+    publicDir,
+    'category.html',
+    categoryCrawlerMeta(req.query.slug),
+  );
+});
+
+app.get('/search.html', (req, res) => {
+  sendHtmlPage(
+    res,
+    publicDir,
+    'search.html',
+    searchCrawlerMeta(req.query.q),
+  );
+});
+
+app.get('/product.html', (req, res) => {
+  sendHtmlPage(
+    res,
+    publicDir,
+    'product.html',
+    productCrawlerMeta(req.query),
+  );
+});
+
+app.get('/faq.html', (_req, res) => {
+  sendHtmlPage(res, publicDir, 'faq.html', null, { faqJsonLd: true });
+});
+
+app.get('/sitemap.xml', (_req, res) => {
+  res.type('application/xml').send(buildSitemapXml());
+});
+
+app.use(express.static(publicDir));
 
 function sendJson(res, payload, status = 200) {
   res.status(status).set(NO_STORE).json(payload);

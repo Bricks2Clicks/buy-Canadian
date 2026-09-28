@@ -4,6 +4,11 @@ export const DEFAULT_DESCRIPTION =
   'Discover products from Canadian Shopify merchants. Live search from the Shopify Global Catalog — no stored product database. Ships within Canada.';
 export const DEFAULT_KEYWORDS =
   'Buy Canadian, Canadian products, Shopify Canada, made in Canada, Canadian merchants, shop local Canada';
+export const OG_IMAGE_PATH = '/buyCanadian1200x627.png';
+export const OG_IMAGE_WIDTH = '1200';
+export const OG_IMAGE_HEIGHT = '627';
+export const OG_IMAGE_ALT =
+  'Buy Canadian | By Canadians, For Canadians. Discover Canadian made products sold by Canadian merchants.';
 
 export function siteOrigin() {
   return window.location.origin;
@@ -35,6 +40,10 @@ function upsertLink(rel, href) {
   el.setAttribute('href', href);
 }
 
+function removeMeta(attr, key) {
+  document.head.querySelector(`meta[${attr}="${key}"]`)?.remove();
+}
+
 export function injectJsonLd(data) {
   const script = document.createElement('script');
   script.type = 'application/ld+json';
@@ -60,14 +69,14 @@ export function applyPageSeo({
   image,
 }) {
   const url = absoluteUrl(path);
-  const ogImage = image ? absoluteUrl(image) : absoluteUrl('/buyCanadian.png');
+  const ogImage = image ? absoluteUrl(image) : absoluteUrl(OG_IMAGE_PATH);
 
   document.title = title;
 
   upsertMeta('name', 'description', description);
   upsertMeta('name', 'keywords', DEFAULT_KEYWORDS);
   upsertMeta('name', 'author', SITE_NAME);
-  upsertMeta('name', 'robots', noindex ? 'noindex, nofollow' : 'index, follow');
+  upsertMeta('name', 'robots', noindex ? 'noindex, follow' : 'index, follow');
 
   upsertMeta('name', 'geo.region', 'CA');
   upsertMeta('name', 'geo.placename', 'Canada');
@@ -81,14 +90,24 @@ export function applyPageSeo({
   upsertMeta('property', 'og:type', type);
   upsertMeta('property', 'og:locale', 'en_CA');
   upsertMeta('property', 'og:image', ogImage);
+  upsertMeta('property', 'og:image:alt', image ? title : OG_IMAGE_ALT);
+  if (image) {
+    removeMeta('property', 'og:image:width');
+    removeMeta('property', 'og:image:height');
+    removeMeta('property', 'og:image:type');
+  } else {
+    upsertMeta('property', 'og:image:type', 'image/png');
+    upsertMeta('property', 'og:image:width', OG_IMAGE_WIDTH);
+    upsertMeta('property', 'og:image:height', OG_IMAGE_HEIGHT);
+  }
 
   upsertMeta('name', 'twitter:card', image ? 'summary' : 'summary_large_image');
   upsertMeta('name', 'twitter:title', title);
   upsertMeta('name', 'twitter:description', description);
   upsertMeta('name', 'twitter:image', ogImage);
+  upsertMeta('name', 'twitter:image:alt', image ? title : OG_IMAGE_ALT);
 
   upsertLink('canonical', url);
-  upsertLink('alternate', url);
   document.documentElement.lang = 'en-CA';
 }
 
@@ -123,11 +142,24 @@ export function organizationSchema() {
     '@id': `${origin}/#organization`,
     name: SITE_NAME,
     url: origin,
-    logo: `${origin}/icons/maple-leaf.png`,
+    logo: {
+      '@type': 'ImageObject',
+      url: `${origin}/apple-touch-icon.png`,
+      width: 180,
+      height: 180,
+    },
+    image: `${origin}/buyCanadian1200x627.png`,
     description: DEFAULT_DESCRIPTION,
     areaServed: {
       '@type': 'Country',
       name: 'Canada',
+    },
+    sameAs: ['https://github.com/Bricks2Clicks/buy-Canadian'],
+    parentOrganization: {
+      '@type': 'Organization',
+      name: 'Bricks2Clicks',
+      url: 'https://bricks2clicks.online/',
+      sameAs: ['https://www.linkedin.com/company/bricks-2-clicks/'],
     },
   };
 }
